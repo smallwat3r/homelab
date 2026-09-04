@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Provision capo, the master Raspberry Pi 4 acting as Tailscale subnet router and
+# Provision capo, the Raspberry Pi 4 acting as Tailscale subnet router and
 # exit node, and running Home Assistant Container.
-# Idempotent. Run as the pi user, from any directory: ./master/setup.sh
+# Idempotent. Run as the pi user, from any directory: ./capo/setup.sh
 
 set -euo pipefail
 
@@ -16,6 +16,7 @@ readonly HACS_DIR="${HA_CONFIG_DIR}/custom_components/hacs"
 readonly HACS_ZIP_URL="https://github.com/hacs/integration/releases/latest/download/hacs.zip"
 readonly EERO_DIR="${HA_CONFIG_DIR}/custom_components/eero"
 readonly EERO_TAR_URL="https://github.com/schmittx/home-assistant-eero/archive/refs/heads/main.tar.gz"
+readonly CF_CREDENTIALS="/root/.secrets/cloudflare.ini"
 
 require_pi_user() {
   if [[ "$(id -un)" != "pi" ]]; then
@@ -47,13 +48,40 @@ setup_subnet_router() {
   sudo tailscale set --advertise-routes="${LAN_SUBNET}" --advertise-exit-node
 }
 
-# Serve Home Assistant over HTTPS on the tailnet, tailscaled persists this
-# across reboots and issues the certificate itself. HA must trust the proxy:
-# set 127.0.0.1 and ::1 as trusted proxies under Settings > System > Network
-# (HTTP config is UI-managed in current HA, yaml http blocks are ignored)
+# One wildcard Let's Encrypt certificate for *.DOMAIN via the DNS-01
+# challenge, Cloudflare edits the TXT record so nothing needs to be reachable
+# from the internet. Only capo holds the zone token, `make cert-token` puts
+# it in place. certbot's own systemd timer renews, the deploy hook restarts
+# HA so it picks up the new files.
+install_certificate() {
+  log "certificate"
+  if ! sudo test -f "${CF_CREDENTIALS}"; then
+    echo "missing ${CF_CREDENTIALS}, run 'make cert-token' first" >&2
+    exit 1
+  fi
+  if ! command -v certbot >/dev/null; then
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+      certbot python3-certbot-dns-cloudflare
+  fi
+  sudo certbot certonly --non-interactive --agree-tos --register-unsafely-without-email \
+    --keep-until-expiring --cert-name "${DOMAIN}" -d "*.${DOMAIN}" \
+    --dns-cloudflare --dns-cloudflare-credentials "${CF_CREDENTIALS}" \
+    --dns-cloudflare-propagation-seconds 20 \
+    --deploy-hook "docker restart homeassistant 2>/dev/null || true"
+}
+
+# HA serves TLS itself with the wildcard cert, mounted read-only by the
+# compose file. HTTP settings are store-managed in current HA (yaml http
+# blocks are ignored after first boot), so this is a one-time UI step:
+# Settings > System > Network, SSL certificate and key
+#   /etc/letsencrypt/live/<DOMAIN>/fullchain.pem and privkey.pem
+# plus 127.0.0.1 and ::1 as trusted proxies for tailscale serve below.
+# Keep the MagicDNS name working too: tailscaled terminates TLS for
+# capo.<tailnet>.ts.net and proxies to HA over TLS, hence https+insecure
 serve_home_assistant() {
   log "tailscale serve"
-  sudo tailscale serve --bg 8123 >/dev/null
+  sudo tailscale serve reset
+  sudo tailscale serve --bg https+insecure://127.0.0.1:8123 >/dev/null
 }
 
 install_docker() {
@@ -137,10 +165,11 @@ main() {
   install_deps
   setup_subnet_router
   install_docker
+  install_certificate
   install_home_assistant
   serve_home_assistant
   verify_forwarding
-  log "done, https://capo.${TAILNET}"
+  log "done, https://capo.${DOMAIN}"
 }
 
 main "$@"
