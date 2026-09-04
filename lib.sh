@@ -30,10 +30,13 @@ install_glances() {
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
       glances python3-fastapi python3-uvicorn python3-jinja2 "$@"
   fi
+  # the unit reads BIND from here, keeping the address out of the unit file
+  echo "BIND=${ip}" | sudo tee /etc/default/glances >/dev/null
   sudo install -m 0644 "${HOST_DIR}/glances.service" /etc/systemd/system/
   sudo install -D -m 0644 "${HOST_DIR}/glances.conf" /etc/glances/glances.conf
   sudo systemctl daemon-reload
-  sudo systemctl enable --now glances.service
+  sudo systemctl enable glances.service
+  # restart rather than enable --now so config changes always take effect
   sudo systemctl restart glances.service
 
   log "verify glances"
@@ -42,5 +45,5 @@ install_glances() {
     sleep 2
   done
   echo "glances api not answering on ${ip}:61208" >&2
-  exit 1
+  return 1
 }

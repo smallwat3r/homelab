@@ -4,7 +4,8 @@ After=network-online.target docker.service
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/bin/glances -w --disable-webui --bind 192.168.4.78
+EnvironmentFile=/etc/default/glances
+ExecStart=/usr/bin/glances -w --disable-webui --bind ${BIND}
 Restart=on-failure
 DynamicUser=yes
 SupplementaryGroups=docker
