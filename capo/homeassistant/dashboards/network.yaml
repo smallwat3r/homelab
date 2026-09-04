@@ -1,0 +1,139 @@
+title: Network
+views:
+  - title: Network
+    path: network
+    cards:
+      - type: entities
+        title: capowifi
+        entities:
+          - sensor.capowifi_status
+          - sensor.capowifi_connected_clients
+          - sensor.capowifi_connected_guest_clients
+          - sensor.capowifi_public_ip
+          - switch.capowifi_guest_network
+          - switch.capowifi_ad_blocking
+          - update.living_room_living_room_capowifi_living_room_firmware
+      - type: entities
+        title: Speed test
+        entities:
+          - sensor.capowifi_download_speed
+          - sensor.capowifi_upload_speed
+          - button.capowifi_run_speed_test
+      - type: entities
+        title: Profiles
+        entities:
+          - switch.unassigned_capowifi_unassigned_paused
+          - sensor.unassigned_capowifi_unassigned_connected_clients
+      - type: entities
+        title: Devices
+        entities:
+          - entity: device_tracker.capo_wireless_capowifi_capo_wireless
+            name: capo
+          - entity: device_tracker.nas_wireless_capowifi_nas_wireless
+            name: nas
+          - entity: device_tracker.gardener_wireless_capowifi_gardener_wireless
+            name: gardener
+          - entity: device_tracker.retropie_wireless_capowifi_retropie_wireless
+            name: retropie
+          - entity: device_tracker.pi3a_wireless_capowifi_pi3a_wireless
+            name: pi3a
+          - entity: device_tracker.samsung_washer_wireless_capowifi_samsung_washer_wireless
+            name: Samsung washer
+          - entity: device_tracker.chromecast_wireless_capowifi_chromecast_wireless
+            name: Chromecast
+          - entity: device_tracker.rsm_wireless_capowifi_rsm_wireless
+            name: rsm
+          - entity: device_tracker.c110_wireless_capowifi_c110_wireless
+            name: Tapo C110
+          - entity: device_tracker.c100_cf21a0_wireless_capowifi_c100_cf21a0_wireless
+            name: Tapo C100 CF21A0
+          - entity: device_tracker.c100e25325_wireless_capowifi_c100e25325_wireless
+            name: Tapo C100 E25325
+      - type: entities
+        title: Pause
+        entities:
+          - entity: switch.capo_wireless_capowifi_capo_wireless_paused
+            name: capo
+          - entity: switch.nas_wireless_capowifi_nas_wireless_paused
+            name: nas
+          - entity: switch.gardener_wireless_capowifi_gardener_wireless_paused
+            name: gardener
+          - entity: switch.retropie_wireless_capowifi_retropie_wireless_paused
+            name: retropie
+          - entity: switch.pi3a_wireless_capowifi_pi3a_wireless_paused
+            name: pi3a
+          - entity: switch.samsung_washer_wireless_capowifi_samsung_washer_wireless_paused
+            name: Samsung washer
+          - entity: switch.chromecast_wireless_capowifi_chromecast_wireless_paused
+            name: Chromecast
+          - entity: switch.rsm_wireless_capowifi_rsm_wireless_paused
+            name: rsm
+          - entity: switch.c110_wireless_capowifi_c110_wireless_paused
+            name: Tapo C110
+          - entity: switch.c100_cf21a0_wireless_capowifi_c100_cf21a0_wireless_paused
+            name: Tapo C100 CF21A0
+          - entity: switch.c100e25325_wireless_capowifi_c100e25325_wireless_paused
+            name: Tapo C100 E25325
+      - type: entities
+        title: NAS
+        entities:
+          - entity: sensor.192_168_4_76_uptime
+            name: Uptime
+          - entity: sensor.192_168_4_76_cpu_usage
+            name: CPU
+          - entity: sensor.192_168_4_76_cpu_load
+            name: Load
+          - entity: sensor.192_168_4_76_cpu_thermal_0_temperature
+            name: CPU temperature
+          - entity: sensor.192_168_4_76_memory_usage
+            name: Memory
+          - entity: sensor.192_168_4_76_disk_usage
+            name: SD card
+          - entity: sensor.192_168_4_76_srv_dev_disk_by_uuid_7458469d_2afa_4b57_b708_a9c015f7fddb_disk_usage
+            name: Data disk
+          - entity: sensor.192_168_4_76_srv_dev_disk_by_uuid_7458469d_2afa_4b57_b708_a9c015f7fddb_disk_free
+            name: Data disk free
+          - entity: sensor.192_168_4_76_sda_disk_read
+            name: Data disk read
+          - entity: sensor.192_168_4_76_sda_disk_write
+            name: Data disk write
+      - type: entities
+        title: Gardener
+        entities:
+          - entity: sensor.192_168_4_78_uptime
+            name: Uptime
+          - entity: sensor.192_168_4_78_cpu_usage
+            name: CPU
+          - entity: sensor.192_168_4_78_cpu_load
+            name: Load
+          - entity: sensor.192_168_4_78_cpu_thermal_0_temperature
+            name: CPU temperature
+          - entity: sensor.192_168_4_78_memory_usage
+            name: Memory
+          - entity: sensor.192_168_4_78_disk_usage
+            name: SD card
+          - entity: sensor.192_168_4_78_containers_active
+            name: Containers running
+          - entity: sensor.192_168_4_78_containers_cpu_usage
+            name: Containers CPU
+          - entity: sensor.192_168_4_78_containers_memory_used
+            name: Containers memory
+      # NAS via the Glances integration, rename entities to match the ids HA
+      # generates once Glances is enabled in OMV and added in HA
+      - type: entities
+        title: NAS
+        entities:
+          - sensor.nas_cpu_used
+          - sensor.nas_memory_used_percent
+          - sensor.nas_disk_used_percent
+          - sensor.nas_containers_active
+          - sensor.nas_uptime
+  - title: Gardener
+    path: gardener
+    cards:
+      - type: button
+        name: Open gardener
+        icon: mdi:sprout
+        tap_action:
+          action: url
+          url_path: https://gardener.feist-corn.ts.net
