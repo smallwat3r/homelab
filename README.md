@@ -8,12 +8,14 @@ helpers shared by the setup scripts, `hosts.conf` the LAN addresses.
 |-----------|--------------|------|
 | master    | capo     | Tailscale subnet router and exit node, Home Assistant Container |
 | nas       | nas      | OpenMediaVault, Glances for HA |
-| gardener  | gardener | rpi-gardener containers (deployed separately), Glances for HA |
+| gardener  | gardener | rpi-gardener containers, Glances for HA |
 
 ## Usage
 
 ```
+make provision        # provision every host, idempotent
 make provision-<dir>  # rsync the repo to the host and run its setup.sh, idempotent
+make deploy-gardener  # deploy smallwat3r/rpi-gardener to the gardener Pi
 make ha-sync          # push Home Assistant config, validate, restart
 make ha-logs          # tail the Home Assistant container logs
 make status           # quick health check of all hosts

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Provision gardener, a Raspberry Pi 4 running the rpi-gardener containers.
-# The app is deployed separately, this only adds what Home Assistant reads.
+# The app is deployed with make deploy-gardener, this only adds what Home
+# Assistant reads.
 # Idempotent. Run as a sudoer, from any directory: ./gardener/setup.sh
 
 set -euo pipefail
