@@ -1,4 +1,5 @@
 # Manage the Pis from this machine over the tailnet. One directory per host.
+include hosts.conf
 REMOTE_DIR ?= /home/pi/homelab
 HOST_master = capo.ts
 HOST_nas = nas.ts
@@ -37,5 +38,5 @@ ha-logs:
 
 status:
 	ssh $(HOST_master) 'docker ps --format "table {{.Names}}\t{{.Status}}"; tailscale status --self | head -1; sudo iptables -S FORWARD | sed -n 2p'
-	ssh $(HOST_nas) 'systemctl is-active glances; curl -s -m 3 http://192.168.4.76:61208/api/4/status; echo'
-	ssh $(HOST_gardener) 'systemctl is-active glances; curl -s -m 3 http://192.168.4.78:61208/api/4/status; echo'
+	ssh $(HOST_nas) 'systemctl is-active glances; curl -s -m 3 http://$(NAS_IP):61208/api/4/status; echo'
+	ssh $(HOST_gardener) 'systemctl is-active glances; curl -s -m 3 http://$(GARDENER_IP):61208/api/4/status; echo'

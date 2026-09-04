@@ -1,6 +1,8 @@
 # Shared helpers, sourced by each host's setup.sh, which must set HOST_DIR
 # to its own directory first.
 
+source "$(dirname "${BASH_SOURCE[0]}")/hosts.conf"
+
 log() { printf '==> %s\n' "$*"; }
 
 # Install glances from HOST_DIR's glances.conf and glances.service, then wait

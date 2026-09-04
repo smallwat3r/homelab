@@ -7,13 +7,12 @@ set -euo pipefail
 
 HOST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly HOST_DIR
-readonly LAN_IP="192.168.4.76"
 
 source "${HOST_DIR}/../lib.sh"
 
 main() {
-  install_glances "${LAN_IP}"
-  log "done, add the Glances integration in HA with host ${LAN_IP}"
+  install_glances "${NAS_IP}"
+  log "done, add the Glances integration in HA with host ${NAS_IP}"
 }
 
 main "$@"

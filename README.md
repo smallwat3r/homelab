@@ -2,7 +2,7 @@
 
 Config and provisioning for the Raspberry Pis on the home network, managed
 from this machine over the tailnet. One directory per host, `lib.sh` holds
-helpers shared by the setup scripts.
+helpers shared by the setup scripts, `hosts.conf` the LAN addresses.
 
 | Directory | Tailnet host | Role |
 |-----------|--------------|------|

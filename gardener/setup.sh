@@ -7,14 +7,13 @@ set -euo pipefail
 
 HOST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly HOST_DIR
-readonly LAN_IP="192.168.4.78"
 
 source "${HOST_DIR}/../lib.sh"
 
 main() {
   # python3-docker adds container stats to what glances exposes
-  install_glances "${LAN_IP}" python3-docker
-  log "done, add the Glances integration in HA with host ${LAN_IP}"
+  install_glances "${GARDENER_IP}" python3-docker
+  log "done, add the Glances integration in HA with host ${GARDENER_IP}"
 }
 
 main "$@"
