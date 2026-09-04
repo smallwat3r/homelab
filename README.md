@@ -7,7 +7,7 @@ helpers shared by the setup scripts, `hosts.conf` the LAN addresses.
 | Directory | Tailnet host | Role |
 |-----------|--------------|------|
 | master    | capo     | Tailscale subnet router and exit node, Home Assistant Container |
-| nas       | nas      | OpenMediaVault (installed by hand), Glances for HA |
+| nas       | nas      | OpenMediaVault, Glances for HA |
 | gardener  | gardener | rpi-gardener containers (deployed separately), Glances for HA |
 
 ## Usage
