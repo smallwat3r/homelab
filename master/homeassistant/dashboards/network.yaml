@@ -1,0 +1,71 @@
+title: Network
+views:
+  - title: Network
+    path: network
+    cards:
+      - type: entities
+        title: capowifi
+        entities:
+          - sensor.capowifi_status
+          - sensor.capowifi_connected_clients
+          - sensor.capowifi_connected_guest_clients
+          - sensor.capowifi_public_ip
+          - switch.capowifi_guest_network
+          - switch.capowifi_ad_blocking
+          - update.living_room_living_room_capowifi_living_room_firmware
+      - type: entities
+        title: Speed test
+        entities:
+          - sensor.capowifi_download_speed
+          - sensor.capowifi_upload_speed
+          - button.capowifi_run_speed_test
+      - type: entities
+        title: Profiles
+        entities:
+          - switch.unassigned_capowifi_unassigned_paused
+          - sensor.unassigned_capowifi_unassigned_connected_clients
+      - type: entities
+        title: Devices
+        entities: []
+      - type: entities
+        title: NAS
+        entities:
+          - entity: sensor.192_168_4_76_uptime
+            name: Uptime
+          - entity: sensor.192_168_4_76_cpu_usage
+            name: CPU
+          - entity: sensor.192_168_4_76_cpu_load
+            name: Load
+          - entity: sensor.192_168_4_76_cpu_thermal_0_temperature
+            name: CPU temperature
+          - entity: sensor.192_168_4_76_memory_usage
+            name: Memory
+          - entity: sensor.192_168_4_76_disk_usage
+            name: SD card
+          - entity: sensor.192_168_4_76_srv_dev_disk_by_uuid_7458469d_2afa_4b57_b708_a9c015f7fddb_disk_usage
+            name: Data disk
+          - entity: sensor.192_168_4_76_srv_dev_disk_by_uuid_7458469d_2afa_4b57_b708_a9c015f7fddb_disk_free
+            name: Data disk free
+          - entity: sensor.192_168_4_76_sda_disk_read
+            name: Data disk read
+          - entity: sensor.192_168_4_76_sda_disk_write
+            name: Data disk write
+      # NAS via the Glances integration, rename entities to match the ids HA
+      # generates once Glances is enabled in OMV and added in HA
+      - type: entities
+        title: NAS
+        entities:
+          - sensor.nas_cpu_used
+          - sensor.nas_memory_used_percent
+          - sensor.nas_disk_used_percent
+          - sensor.nas_containers_active
+          - sensor.nas_uptime
+  - title: Gardener
+    path: gardener
+    cards:
+      - type: button
+        name: Open gardener
+        icon: mdi:sprout
+        tap_action:
+          action: url
+          url_path: https://gardener.feist-corn.ts.net

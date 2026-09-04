@@ -1,0 +1,30 @@
+# Shared helpers, sourced by each host's setup.sh, which must set HOST_DIR
+# to its own directory first.
+
+log() { printf '==> %s\n' "$*"; }
+
+# Install glances from HOST_DIR's glances.conf and glances.service, then wait
+# for its API to answer on the given LAN address. Extra apt packages can be
+# passed after the address.
+install_glances() {
+  local ip="$1"
+  shift
+  log "glances"
+  if ! command -v glances >/dev/null; then
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+      glances python3-fastapi python3-uvicorn python3-jinja2 "$@"
+  fi
+  sudo install -m 0644 "${HOST_DIR}/glances.service" /etc/systemd/system/
+  sudo install -D -m 0644 "${HOST_DIR}/glances.conf" /etc/glances/glances.conf
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now glances.service
+  sudo systemctl restart glances.service
+
+  log "verify glances"
+  for _ in {1..10}; do
+    curl -sf -m 3 "http://${ip}:61208/api/4/status" >/dev/null && return
+    sleep 2
+  done
+  echo "glances api not answering on ${ip}:61208" >&2
+  exit 1
+}

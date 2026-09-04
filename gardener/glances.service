@@ -1,0 +1,15 @@
+[Unit]
+Description=Glances API for Home Assistant
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/glances -w --disable-webui --bind 192.168.4.78
+Restart=on-failure
+DynamicUser=yes
+SupplementaryGroups=docker
+ProtectSystem=strict
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

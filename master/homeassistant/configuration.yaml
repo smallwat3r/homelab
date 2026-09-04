@@ -1,0 +1,17 @@
+default_config:
+
+recorder:
+  purge_keep_days: 3
+  commit_interval: 30
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+lovelace:
+  dashboards:
+    dashboard-network:
+      mode: yaml
+      title: Network
+      icon: mdi:router-wireless
+      filename: dashboards/network.yaml
