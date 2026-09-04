@@ -33,11 +33,11 @@ install_deps() {
   done
 }
 
-install_tailscale() {
-  log "tailscale"
-  if ! command -v tailscale >/dev/null; then
-    curl -fsSL https://tailscale.com/install.sh | sh
-  fi
+# On top of lib's install: forwarding sysctls, GRO tuning, and advertising
+# the LAN subnet and exit node
+setup_subnet_router() {
+  install_tailscale
+  log "subnet router"
   sudo install -m 0644 "${HOST_DIR}/tailscale/99-tailscale.conf" /etc/sysctl.d/
   sudo sysctl -q --system
   sudo install -m 0644 "${HOST_DIR}/tailscale/tailscale-gro.service" /etc/systemd/system/
@@ -45,11 +45,6 @@ install_tailscale() {
     /etc/systemd/system/tailscaled.service.d/after-docker.conf
   sudo systemctl daemon-reload
   sudo systemctl enable --now tailscale-gro.service
-  # tailscale up is not idempotent (it resets prefs it is not given), only run
-  # it to authenticate, then set the prefs we care about
-  if ! sudo tailscale status >/dev/null 2>&1; then
-    sudo tailscale up
-  fi
   sudo tailscale set --advertise-routes="${LAN_SUBNET}" --advertise-exit-node
 }
 
@@ -141,7 +136,7 @@ verify_forwarding() {
 main() {
   require_pi_user
   install_deps
-  install_tailscale
+  setup_subnet_router
   install_docker
   install_home_assistant
   serve_home_assistant

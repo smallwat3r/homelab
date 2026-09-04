@@ -1,9 +1,10 @@
 # Manage the Pis from this machine over the tailnet. One directory per host.
 include hosts.conf
 REMOTE_DIR ?= /home/pi/homelab
-HOST_master = capo.ts
-HOST_nas = nas.ts
-HOST_gardener = gardener.ts
+TAILNET = feist-corn.ts.net
+HOST_master = pi@capo.$(TAILNET)
+HOST_nas = pi@nas.$(TAILNET)
+HOST_gardener = pi@gardener.$(TAILNET)
 PROVISION = provision-master provision-nas provision-gardener
 HA_DIR = /opt/homeassistant
 HA_CONFIG_DIR = $(HA_DIR)/config

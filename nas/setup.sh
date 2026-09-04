@@ -11,6 +11,7 @@ readonly HOST_DIR
 source "${HOST_DIR}/../lib.sh"
 
 main() {
+  install_tailscale
   install_glances "${NAS_IP}"
   log "done, add the Glances integration in HA with host ${NAS_IP}"
 }

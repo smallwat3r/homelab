@@ -5,6 +5,20 @@ source "$(dirname "${BASH_SOURCE[0]}")/hosts.conf"
 
 log() { printf '==> %s\n' "$*"; }
 
+# Every host joins the tailnet directly, even though capo's subnet routing
+# already reaches them, so remote access survives capo being down
+install_tailscale() {
+  log "tailscale"
+  if ! command -v tailscale >/dev/null; then
+    curl -fsSL https://tailscale.com/install.sh | sh
+  fi
+  # tailscale up is not idempotent (it resets prefs it is not given), only
+  # run it to authenticate
+  if ! sudo tailscale status >/dev/null 2>&1; then
+    sudo tailscale up
+  fi
+}
+
 # Install glances from HOST_DIR's glances.conf and glances.service, then wait
 # for its API to answer on the given LAN address. Extra apt packages can be
 # passed after the address.

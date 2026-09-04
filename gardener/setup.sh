@@ -11,6 +11,7 @@ readonly HOST_DIR
 source "${HOST_DIR}/../lib.sh"
 
 main() {
+  install_tailscale
   # python3-docker adds container stats to what glances exposes
   install_glances "${GARDENER_IP}" python3-docker
   log "done, add the Glances integration in HA with host ${GARDENER_IP}"
