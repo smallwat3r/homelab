@@ -11,7 +11,6 @@ readonly HOST_DIR
 source "${HOST_DIR}/../lib.sh"
 
 readonly LAN_SUBNET="192.168.4.0/24"
-readonly HA_DIR="/opt/homeassistant"
 readonly HA_CONFIG_DIR="${HA_DIR}/config"
 readonly HACS_DIR="${HA_CONFIG_DIR}/custom_components/hacs"
 readonly HACS_ZIP_URL="https://github.com/hacs/integration/releases/latest/download/hacs.zip"
@@ -141,7 +140,7 @@ main() {
   install_home_assistant
   serve_home_assistant
   verify_forwarding
-  log "done, https://capo.feist-corn.ts.net"
+  log "done, https://capo.${TAILNET}"
 }
 
 main "$@"

@@ -1,0 +1,6 @@
+# Facts shared by the Makefile and the setup scripts, VAR=value only so
+# make can include it and bash can source it
+TAILNET=feist-corn.ts.net
+NAS_IP=192.168.4.76
+GARDENER_IP=192.168.4.78
+HA_DIR=/opt/homeassistant
