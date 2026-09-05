@@ -20,10 +20,10 @@ dns:  ## Point <host>.ts.smallwat3r.com at each tailnet IP, DRY_RUN=1 to preview
 	DRY_RUN=$(DRY_RUN) dns/sync.sh
 
 cert-token:  ## Put the Cloudflare token from pass on ha for certbot, once
-	pass show cloudflare/ts-dns | head -1 | tr -d '\r' \
-	  | ssh $(HOST_ha) 'sudo install -d -m 0700 /root/.secrets \
+	pass show $(CF_PASS_ENTRY) | head -1 | tr -d '\r' \
+	  | ssh $(HOST_ha) 'sudo install -d -m 0700 $(dir $(CF_CREDENTIALS)) \
 	    && { printf "dns_cloudflare_api_token = "; cat; } \
-	    | sudo sh -c "umask 077 && cat > /root/.secrets/cloudflare.ini"'
+	    | sudo sh -c "umask 077 && cat > $(CF_CREDENTIALS)"'
 
 push:  ## Copy the whole repo to a host (make push HOST=pi@nas.ts.smallwat3r.com)
 	rsync -a --delete --exclude .git --filter=':- .gitignore' ./ $(HOST):$(REMOTE_DIR)/
@@ -55,5 +55,5 @@ ha-logs:  ## Tail the Home Assistant container logs
 
 status:  ## Quick health check of all hosts
 	ssh $(HOST_ha) 'docker ps --format "table {{.Names}}\t{{.Status}}"; tailscale status --self | head -1; sudo iptables -S FORWARD | sed -n 2p'
-	ssh $(HOST_nas) 'systemctl is-active glances; curl -s -m 3 http://$(NAS_IP):61208/api/4/status; echo'
-	ssh $(HOST_gardener) 'systemctl is-active glances; curl -s -m 3 http://$(GARDENER_IP):61208/api/4/status; echo'
+	ssh $(HOST_nas) 'systemctl is-active glances; curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo'
+	ssh $(HOST_gardener) 'systemctl is-active glances; curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo'

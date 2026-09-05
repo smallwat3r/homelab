@@ -41,9 +41,9 @@ install_glances() {
 
   log "verify glances"
   for _ in {1..10}; do
-    curl -sf -m 3 "http://${ip}:61208/api/4/status" >/dev/null && return
+    curl -sf -m 3 "http://${ip}:${GLANCES_PORT}/api/4/status" >/dev/null && return
     sleep 2
   done
-  echo "glances api not answering on ${ip}:61208" >&2
+  echo "glances api not answering on ${ip}:${GLANCES_PORT}" >&2
   return 1
 }

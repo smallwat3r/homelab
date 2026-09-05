@@ -2,7 +2,7 @@
 # Upsert A records <host>.ts.smallwat3r.com -> tailnet IP in Cloudflare for
 # the hosts below, taking the IPs from the local tailscale client.
 # Token: a Cloudflare API token with Zone:DNS:Edit on smallwat3r.com, read
-# from $CF_API_TOKEN or `pass show cloudflare/ts-dns`.
+# from $CF_API_TOKEN or pass, entry named by CF_PASS_ENTRY in config.
 # DRY_RUN=1 prints the changes without applying them.
 
 set -euo pipefail
@@ -13,9 +13,9 @@ readonly ZONE="${DOMAIN#*.}"
 readonly HOSTS=(ha nas gardener)
 readonly API="https://api.cloudflare.com/client/v4"
 
-token="${CF_API_TOKEN:-$(pass show cloudflare/ts-dns 2>/dev/null || true)}"
+token="${CF_API_TOKEN:-$(pass show "${CF_PASS_ENTRY}" 2>/dev/null || true)}"
 if [[ -z "${token}" ]]; then
-  echo "no Cloudflare token, set CF_API_TOKEN or 'pass insert cloudflare/ts-dns'" >&2
+  echo "no Cloudflare token, set CF_API_TOKEN or 'pass insert ${CF_PASS_ENTRY}'" >&2
   exit 1
 fi
 readonly token

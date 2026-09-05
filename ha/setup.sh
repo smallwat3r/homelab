@@ -16,7 +16,6 @@ readonly HACS_DIR="${HA_CONFIG_DIR}/custom_components/hacs"
 readonly HACS_ZIP_URL="https://github.com/hacs/integration/releases/latest/download/hacs.zip"
 readonly EERO_DIR="${HA_CONFIG_DIR}/custom_components/eero"
 readonly EERO_TAR_URL="https://github.com/schmittx/home-assistant-eero/archive/refs/heads/main.tar.gz"
-readonly CF_CREDENTIALS="/root/.secrets/cloudflare.ini"
 
 require_pi_user() {
   if [[ "$(id -un)" != "pi" ]]; then
