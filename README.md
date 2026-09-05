@@ -68,7 +68,11 @@ from Glances.
 ## Glances
 
 nas and gardener run Glances as a read-only HTTP API on port 61208, bound
-to the LAN address so it is not reachable on the tailnet IP. glances.conf
+to the LAN address so it is not reachable on the tailnet IP. HA polls it by
+LAN IP rather than `<host>.ts.smallwat3r.com` because everything shares
+one LAN: going through Tailscale would make local monitoring depend on
+tailscaled and encrypt traffic that never leaves the house, while the
+LAN-only bind keeps the unauthenticated API off the tailnet. glances.conf
 hides filesystems, disks and interfaces that would only add noise in HA.
 Entities HA already created for hidden items stay in its registry as
 unavailable until deleted from the Glances entities list.

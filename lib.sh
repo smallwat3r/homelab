@@ -22,6 +22,11 @@ install_tailscale() {
 # Install glances from HOST_DIR's glances.conf and glances.service, then wait
 # for its API to answer on the given LAN address. Extra apt packages can be
 # passed after the address.
+# Deliberately the LAN IP, not <host>.DOMAIN over the tailnet: HA and the
+# Pis share a LAN, so polling over Tailscale would add a dependency on
+# tailscaled for local monitoring and encrypt traffic that never leaves the
+# house. The LAN-only bind also keeps the unauthenticated API off the
+# tailnet address. Revisit if a polled host ever sits on another network.
 install_glances() {
   local ip="$1"
   shift
