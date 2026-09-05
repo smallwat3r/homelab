@@ -70,20 +70,6 @@ install_certificate() {
     --deploy-hook "docker restart homeassistant 2>/dev/null || true"
 }
 
-# HA serves TLS itself with the wildcard cert, mounted read-only by the
-# compose file. HTTP settings are store-managed in current HA (yaml http
-# blocks are ignored after first boot), so this is a one-time UI step:
-# Settings > System > Network, SSL certificate and key
-#   /etc/letsencrypt/live/<DOMAIN>/fullchain.pem and privkey.pem
-# plus 127.0.0.1 and ::1 as trusted proxies for tailscale serve below.
-# Keep the MagicDNS name working too: tailscaled terminates TLS for
-# capo.<tailnet>.ts.net and proxies to HA over TLS, hence https+insecure
-serve_home_assistant() {
-  log "tailscale serve"
-  sudo tailscale serve reset
-  sudo tailscale serve --bg https+insecure://127.0.0.1:8123 >/dev/null
-}
-
 install_docker() {
   log "docker"
   if ! command -v docker >/dev/null; then
@@ -123,6 +109,11 @@ install_eero() {
   rm -rf "${tmp}"
 }
 
+# HA serves TLS itself on 443 with the wildcard cert, mounted read-only by
+# the compose file. HTTP settings are store-managed in current HA (yaml http
+# blocks are ignored after first boot), so this is a one-time UI step:
+# Settings > System > Network, port 443, SSL certificate and key
+#   /etc/letsencrypt/live/<DOMAIN>/fullchain.pem and privkey.pem
 install_home_assistant() {
   log "home assistant"
   sudo install -d -o "${USER}" -g "${USER}" "${HA_DIR}" "${HA_CONFIG_DIR}"
@@ -167,7 +158,6 @@ main() {
   install_docker
   install_certificate
   install_home_assistant
-  serve_home_assistant
   verify_forwarding
   log "done, https://capo.${DOMAIN}"
 }

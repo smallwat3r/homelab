@@ -40,11 +40,10 @@ host holds it.
 
 ## Home Assistant
 
-https://capo.ts.smallwat3r.com:8123, HTTPS only. capo holds a Let's Encrypt
-wildcard for `*.ts.smallwat3r.com`, issued by certbot through the Cloudflare
-DNS-01 challenge and renewed by certbot's timer, the deploy hook restarts
-HA. https://capo.feist-corn.ts.net works too, tailscale serve terminates TLS
-for the MagicDNS name and proxies to HA.
+https://capo.ts.smallwat3r.com, HTTPS only on 443. capo holds a Let's
+Encrypt wildcard for `*.ts.smallwat3r.com`, issued by certbot through the
+Cloudflare DNS-01 challenge and renewed by certbot's timer, the deploy hook
+restarts HA.
 
 Runtime state stays on the Pi under /opt/homeassistant, only compose.yaml,
 configuration.yaml and the dashboards are repo-managed. HACS and the eero
@@ -53,10 +52,10 @@ HACS does not manage eero updates.
 
 One-time steps in the HA UI that setup.sh cannot do:
 
-- Settings > System > Network: SSL certificate and key,
-  `/etc/letsencrypt/live/ts.smallwat3r.com/fullchain.pem` and `privkey.pem`,
-  plus 127.0.0.1 and ::1 as trusted proxies for tailscale serve. HTTP
-  settings are store-managed in current HA, yaml http blocks are ignored.
+- Settings > System > Network: port 443, SSL certificate and key
+  `/etc/letsencrypt/live/ts.smallwat3r.com/fullchain.pem` and `privkey.pem`.
+  HTTP settings are store-managed in current HA, yaml http blocks are
+  ignored.
 - Add integrations: HACS, eero (plain eero login, not Amazon, then in
   Configure set both client filters to Exclude with empty lists to track
   every client), Glances for nas and gardener (host from `config`, port

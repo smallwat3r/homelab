@@ -1,7 +1,7 @@
 default_config:
 
 homeassistant:
-  external_url: https://capo.ts.smallwat3r.com:8123
+  external_url: https://capo.ts.smallwat3r.com
 
 recorder:
   purge_keep_days: 3
