@@ -14,7 +14,8 @@ help:  ## Show this help menu
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "%-18s %s\n", $$1, $$2}'
 
-provision: $(PROVISION)  ## Provision every host (or provision-ha|nas|gardener), idempotent
+provision:  ## Provision every host in parallel (or provision-ha|nas|gardener), a down host doesn't block the rest
+	$(MAKE) -j3 -k -O $(PROVISION)
 
 dns:  ## Point <host>.ts.smallwat3r.com at each tailnet IP, DRY_RUN=1 to preview
 	DRY_RUN=$(DRY_RUN) dns/sync.sh
