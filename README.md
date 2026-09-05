@@ -7,7 +7,7 @@ IPs, paths).
 
 | Directory | Host     | Role |
 |-----------|----------|------|
-| capo      | capo     | Tailscale subnet router and exit node, Home Assistant Container, TLS certificate |
+| ha        | ha       | Tailscale subnet router and exit node, Home Assistant Container, TLS certificate |
 | nas       | nas      | OpenMediaVault, Glances for HA |
 | gardener  | gardener | rpi-gardener containers, Glances for HA |
 
@@ -28,19 +28,19 @@ make ha-restart       # restart the Home Assistant container
 make ha-logs          # tail the Home Assistant container logs
 make status           # quick health check of all hosts
 make dns              # point <host>.ts.smallwat3r.com at each tailnet IP, DRY_RUN=1 to preview
-make cert-token       # put the Cloudflare token on capo for certbot, once
+make cert-token       # put the Cloudflare token on ha for certbot, once
 ```
 
 ## Secrets
 
 One Cloudflare API token with Zone:DNS:Edit on smallwat3r.com, stored in
 pass as `cloudflare/ts-dns`. `make dns` reads it locally, `make cert-token`
-copies it to capo as `/root/.secrets/cloudflare.ini` for certbot. No other
+copies it to ha as `/root/.secrets/cloudflare.ini` for certbot. No other
 host holds it.
 
 ## Home Assistant
 
-https://capo.ts.smallwat3r.com, HTTPS only on 443. capo holds a Let's
+https://ha.ts.smallwat3r.com, HTTPS only on 443. ha holds a Let's
 Encrypt wildcard for `*.ts.smallwat3r.com`, issued by certbot through the
 Cloudflare DNS-01 challenge and renewed by certbot's timer, the deploy hook
 restarts HA.
@@ -61,7 +61,7 @@ One-time steps in the HA UI that setup.sh cannot do:
   every client), Glances for nas and gardener (host from `config`, port
   61208, no auth).
 
-The Network dashboard (`capo/homeassistant/dashboards/network.yaml`) lists
+The Network dashboard (`ha/homeassistant/dashboards/network.yaml`) lists
 eero devices with pause switches, speed test, and NAS and gardener health
 from Glances.
 

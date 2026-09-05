@@ -28,7 +28,7 @@ views:
         title: Devices
         entities:
           - entity: device_tracker.capo_wireless_capowifi_capo_wireless
-            name: capo
+            name: ha
           - entity: device_tracker.nas_wireless_capowifi_nas_wireless
             name: nas
           - entity: device_tracker.gardener_wireless_capowifi_gardener_wireless
@@ -53,7 +53,7 @@ views:
         title: Pause
         entities:
           - entity: switch.capo_wireless_capowifi_capo_wireless_paused
-            name: capo
+            name: ha
           - entity: switch.nas_wireless_capowifi_nas_wireless_paused
             name: nas
           - entity: switch.gardener_wireless_capowifi_gardener_wireless_paused

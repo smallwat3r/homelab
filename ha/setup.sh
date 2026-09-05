@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Provision capo, the Raspberry Pi 4 acting as Tailscale subnet router and
+# Provision ha, the Raspberry Pi 4 acting as Tailscale subnet router and
 # exit node, and running Home Assistant Container.
-# Idempotent. Run as the pi user, from any directory: ./capo/setup.sh
+# Idempotent. Run as the pi user, from any directory: ./ha/setup.sh
 
 set -euo pipefail
 
@@ -50,7 +50,7 @@ setup_subnet_router() {
 
 # One wildcard Let's Encrypt certificate for *.DOMAIN via the DNS-01
 # challenge, Cloudflare edits the TXT record so nothing needs to be reachable
-# from the internet. Only capo holds the zone token, `make cert-token` puts
+# from the internet. Only ha holds the zone token, `make cert-token` puts
 # it in place. certbot's own systemd timer renews, the deploy hook restarts
 # HA so it picks up the new files.
 install_certificate() {
@@ -159,7 +159,7 @@ main() {
   install_certificate
   install_home_assistant
   verify_forwarding
-  log "done, https://capo.${DOMAIN}"
+  log "done, https://ha.${DOMAIN}"
 }
 
 main "$@"

@@ -10,7 +10,7 @@ set -euo pipefail
 # shellcheck source=config
 source "$(dirname "${BASH_SOURCE[0]}")/../config"
 readonly ZONE="${DOMAIN#*.}"
-readonly HOSTS=(capo nas gardener)
+readonly HOSTS=(ha nas gardener)
 readonly API="https://api.cloudflare.com/client/v4"
 
 token="${CF_API_TOKEN:-$(pass show cloudflare/ts-dns 2>/dev/null || true)}"

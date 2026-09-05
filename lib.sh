@@ -5,8 +5,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/config"
 
 log() { printf '==> %s\n' "$*"; }
 
-# Every host joins the tailnet directly, even though capo's subnet routing
-# already reaches them, so remote access survives capo being down
+# Every host joins the tailnet directly, even though ha's subnet routing
+# already reaches them, so remote access survives ha being down
 install_tailscale() {
   log "tailscale"
   if ! command -v tailscale >/dev/null; then
