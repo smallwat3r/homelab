@@ -50,7 +50,9 @@ One-time steps in the UI that setup.sh cannot do:
 
 The NAS `stuff` share is mounted on ha over SMB and shows in HA's Media
 browser as NAS. The Media browser only lists images, audio and video, use
-File Browser for everything else. Its admin login starts as admin/admin.
+File Browser for everything else. Its admin login starts as admin/admin,
+change it in Settings > User management right after provisioning, it has
+write access to the whole share.
 
 ## Taildrop
 
