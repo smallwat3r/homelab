@@ -37,6 +37,29 @@ install_taildrop() {
   sudo systemctl restart taildrop.service
 }
 
+# One wildcard Let's Encrypt certificate for *.DOMAIN via the DNS-01
+# challenge, Cloudflare edits the TXT record so nothing needs to be reachable
+# from the internet. Needs the zone token from `make cert-token-<host>`.
+# certbot's own systemd timer renews, the deploy hook given here tells the
+# host's service to pick up the new files.
+install_certificate() {
+  local hook="$1"
+  log "certificate"
+  if ! sudo test -f "${CF_CREDENTIALS}"; then
+    echo "missing ${CF_CREDENTIALS}, run 'make cert-token-$(basename "${HOST_DIR}")' first" >&2
+    exit 1
+  fi
+  if ! command -v certbot >/dev/null; then
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+      certbot python3-certbot-dns-cloudflare
+  fi
+  sudo certbot certonly --non-interactive --agree-tos --register-unsafely-without-email \
+    --keep-until-expiring --cert-name "${DOMAIN}" -d "*.${DOMAIN}" \
+    --dns-cloudflare --dns-cloudflare-credentials "${CF_CREDENTIALS}" \
+    --dns-cloudflare-propagation-seconds 20 \
+    --deploy-hook "${hook}"
+}
+
 # Install glances from HOST_DIR's glances.conf and glances.service, then wait
 # for its API to answer on the given LAN address. Extra apt packages can be
 # passed after the address.

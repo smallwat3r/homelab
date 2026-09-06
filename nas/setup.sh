@@ -74,15 +74,26 @@ install_filebrowser_path() {
   return 1
 }
 
+# The wildcard is loaded into OMV's certificate store by omv-cert, which is
+# also certbot's deploy hook so renewals land in the web UI on their own
+install_omv_certificate() {
+  sed "s/@DOMAIN@/${DOMAIN}/g" "${HOST_DIR}/omv-cert.py" \
+    | sudo install -m 0755 /dev/stdin /usr/local/sbin/omv-cert
+  install_certificate /usr/local/sbin/omv-cert
+  # certbot only runs the hook when it issues, cover the already-valid case
+  sudo /usr/local/sbin/omv-cert
+}
+
 main() {
   install_tailscale
   install_omv
+  install_omv_certificate
   install_glances "${NAS_IP}"
   install_filebrowser
   install_filebrowser_path
   # into the share, so sent files show up in File Browser and HA's /media/NAS
   install_taildrop "$(stuff_share_path)/taildrop"
-  log "done, add the Glances integration in HA with host ${NAS_IP}"
+  log "done, https://nas.${DOMAIN}"
 }
 
 main "$@"

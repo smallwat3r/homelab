@@ -7,10 +7,10 @@ HOST_gardener = pi@gardener.$(DOMAIN)
 PROVISION = provision-ha provision-nas provision-gardener
 GARDENER_SRC ?= $(HOME)/code/rpi-gardener
 
-.PHONY: help lint dns cert-token push provision $(PROVISION) deploy-gardener ha-sync ha-check ha-restart ha-update ha-logs status
+.PHONY: help lint dns push provision $(PROVISION) deploy-gardener ha-sync ha-check ha-restart ha-update ha-logs status
 
 help:  ## Show this help menu
-	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
+	@grep -hE '^[a-zA-Z_%-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "%-18s %s\n", $$1, $$2}'
 
 lint:  ## Shellcheck every script
@@ -22,9 +22,9 @@ provision:  ## Provision every host in parallel (or provision-ha|nas|gardener), 
 dns:  ## Point <host>.ts.smallwat3r.com at each tailnet IP, DRY_RUN=1 to preview
 	DRY_RUN=$(DRY_RUN) dns/sync.sh
 
-cert-token:  ## Put the Cloudflare token from pass on ha for certbot, once
+cert-token-%:  ## Put the Cloudflare token from pass on a host for certbot, once (cert-token-ha|nas)
 	pass show $(CF_PASS_ENTRY) | head -1 | tr -d '\r' \
-	  | ssh $(HOST_ha) 'sudo install -d -m 0700 $(dir $(CF_CREDENTIALS)) \
+	  | ssh $(HOST_$*) 'sudo install -d -m 0700 $(dir $(CF_CREDENTIALS)) \
 	    && { printf "dns_cloudflare_api_token = "; cat; } \
 	    | sudo sh -c "umask 077 && cat > $(CF_CREDENTIALS)"'
 

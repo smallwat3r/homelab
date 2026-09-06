@@ -135,7 +135,7 @@ views:
         icon: mdi:folder-open
         tap_action:
           action: url
-          url_path: http://nas.ts.smallwat3r.com/files
+          url_path: https://nas.ts.smallwat3r.com/files
   - title: Gardener
     path: gardener
     cards:

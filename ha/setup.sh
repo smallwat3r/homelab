@@ -46,42 +46,6 @@ setup_subnet_router() {
   sudo tailscale set --advertise-routes="${LAN_SUBNET}" --advertise-exit-node
 }
 
-# One wildcard Let's Encrypt certificate for *.DOMAIN via the DNS-01
-# challenge, Cloudflare edits the TXT record so nothing needs to be reachable
-# from the internet. Only ha holds the zone token, `make cert-token` puts
-# it in place. certbot's own systemd timer renews, the deploy hook restarts
-# HA so it picks up the new files.
-install_certificate() {
-  log "certificate"
-  if ! sudo test -f "${CF_CREDENTIALS}"; then
-    echo "missing ${CF_CREDENTIALS}, run 'make cert-token' first" >&2
-    exit 1
-  fi
-  if ! command -v certbot >/dev/null; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
-      certbot python3-certbot-dns-cloudflare
-  fi
-  sudo certbot certonly --non-interactive --agree-tos --register-unsafely-without-email \
-    --keep-until-expiring --cert-name "${DOMAIN}" -d "*.${DOMAIN}" \
-    --dns-cloudflare --dns-cloudflare-credentials "${CF_CREDENTIALS}" \
-    --dns-cloudflare-propagation-seconds 20 \
-    --deploy-hook "docker restart homeassistant 2>/dev/null || true"
-}
-
-# The NAS share is mounted on the host and bound into the HA container as
-# /media/NAS, HA Container has no network storage of its own
-mount_nas_share() {
-  log "nas share"
-  sudo install -d /mnt/nas/stuff
-  sed "s/@NAS_IP@/${NAS_IP}/" "${HOST_DIR}/mnt-nas-stuff.mount" \
-    | sudo tee /etc/systemd/system/mnt-nas-stuff.mount >/dev/null
-  sudo install -m 0644 "${HOST_DIR}/mnt-nas-stuff.automount" /etc/systemd/system/
-  sudo systemctl daemon-reload
-  sudo systemctl enable --now mnt-nas-stuff.automount
-  # touching the path triggers the mount, a down NAS is not fatal here
-  timeout 10 ls /mnt/nas/stuff >/dev/null 2>&1 || echo "nas share not mounted yet, it mounts on first access" >&2
-}
-
 install_docker() {
   log "docker"
   if ! command -v docker >/dev/null; then
@@ -169,7 +133,8 @@ main() {
   install_taildrop "${HOME}/taildrop"
   install_docker
   mount_nas_share
-  install_certificate
+  # the hook restarts HA so it serves the renewed files
+  install_certificate "docker restart homeassistant 2>/dev/null || true"
   install_home_assistant
   verify_forwarding
   log "done, https://ha.${DOMAIN}"

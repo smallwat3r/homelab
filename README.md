@@ -17,17 +17,17 @@ Everything lives on the tailnet, nothing is reachable from the internet.
 `<host>.ts.smallwat3r.com` are public A records in Cloudflare that point at
 the tailnet IPs, so they resolve anywhere but only answer from a device on
 the tailnet. `make dns` keeps them in sync, Tailscale's split DNS sends the
-domain to Cloudflare's resolvers. ha holds a Let's Encrypt wildcard for
-`*.ts.smallwat3r.com` via the DNS-01 challenge, which is why the records
-have to be public.
+domain to Cloudflare's resolvers. ha and nas each run certbot for a Let's
+Encrypt wildcard on `*.ts.smallwat3r.com` via the DNS-01 challenge, which
+is why the records have to be public.
 
 - https://ha.ts.smallwat3r.com, Home Assistant
-- http://nas.ts.smallwat3r.com, OpenMediaVault, `/files` is File Browser
+- https://nas.ts.smallwat3r.com, OpenMediaVault, `/files` is File Browser
   over the `stuff` share
 - https://gardener.feist-corn.ts.net, rpi-gardener
 
 The only secret is the Cloudflare DNS token in pass as `cloudflare/ts-dns`,
-`make cert-token` copies it to ha once for certbot.
+`make cert-token-<host>` copies it to ha and nas once for certbot.
 
 ## Home Assistant
 
