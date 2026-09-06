@@ -2,8 +2,9 @@
 
 Config and provisioning for the Raspberry Pis at home. One directory per
 host with an idempotent `setup.sh`, `lib.sh` for shared helpers, `config`
-for shared facts (domain, LAN IPs, ports, paths). `make help` lists the
-targets.
+for shared facts (domain, LAN IPs, ports, paths), `dns/sync.sh` behind
+`make dns` and `taildrop.service` installed on ha and nas. `make help`
+lists the targets.
 
 | Directory | Role |
 |-----------|------|
@@ -11,43 +12,63 @@ targets.
 | nas       | OpenMediaVault, File Browser |
 | gardener  | rpi-gardener containers |
 
+Every target reaches a host as `pi@<host>.ts.smallwat3r.com`, so a fresh
+Pi needs Tailscale installed and joined to the tailnet, then `make dns`,
+before `make provision-<host>` works. `make provision` does all three.
+
 ## Access
 
 Everything lives on the tailnet, nothing is reachable from the internet.
 `<host>.ts.smallwat3r.com` are public A records in Cloudflare that point at
-the tailnet IPs, so they resolve anywhere but only answer from a device on
-the tailnet. `make dns` keeps them in sync, Tailscale's split DNS sends the
-domain to Cloudflare's resolvers. ha and nas each run certbot for a Let's
-Encrypt wildcard on `*.ts.smallwat3r.com` via the DNS-01 challenge, which
-is why the records have to be public.
+the tailnet IPs, public because ha and nas each run certbot for a Let's
+Encrypt wildcard on `*.ts.smallwat3r.com` via the DNS-01 challenge. They
+resolve anywhere but only answer from a device on the tailnet. `make dns`
+keeps them in sync, Tailscale's split DNS sends the domain to Cloudflare's
+resolvers.
 
 - https://ha.ts.smallwat3r.com, Home Assistant
 - https://nas.ts.smallwat3r.com, OpenMediaVault, `/files` is File Browser
   over the `stuff` share
 - https://gardener.feist-corn.ts.net, rpi-gardener
 
-The secrets are the Cloudflare DNS token in pass as `cloudflare/ts-dns`,
-which `make cert-token-<host>` copies to ha and nas once for certbot, and
-the IVPN WireGuard config as `ivpn/wg-ha`, which `make ivpn-conf` copies to
-ha once.
+File Browser's admin login starts as admin/admin, change it in Settings >
+User management right after provisioning, it has write access to the whole
+share.
+
+## Secrets
+
+Both live in pass and are copied to the host once, setup.sh never touches
+them.
+
+- `cloudflare/ts-dns`, the Cloudflare DNS token for certbot,
+  `make cert-token-ha` and `make cert-token-nas`
+- `ivpn/wg-ha`, the IVPN WireGuard config, `make ivpn-conf`
 
 ## IVPN
 
 ha's exit node goes out through an IVPN WireGuard tunnel, so any device
 that picks ha as its exit node is behind IVPN without running the IVPN
 client, and IVPN counts one device for all of them. ha's own traffic stays
-direct. Generate a WireGuard config on the IVPN account page (enable IPv6
-in the generator if it offers it, otherwise clients' IPv6 traffic is
-dropped rather than falling back), store it whole in pass as `ivpn/wg-ha`
-and run `make ivpn-conf`. The key is account wide, so `ivpn-ctl server gb`
-on ha moves the tunnel to another server (codes are the gateways in
-IVPN's server list, `ivpn-ctl server` shows the current one). `ivpn-ctl
-stop` sends exit node traffic straight out through the router instead,
-`ivpn-ctl start` puts it back through IVPN. Use those rather than
-systemctl: a tunnel that goes down any other way blocks exit node traffic
-rather than leaking it. The Network dashboard has a switch for the tunnel
-and a server dropdown, HA drives both over ssh to its own host with a key
-that can only run `ivpn-ctl`.
+direct.
+
+Setup: generate a WireGuard config on the IVPN account page, enable IPv6 in
+the generator if it offers it (otherwise clients' IPv6 traffic is dropped
+rather than falling back), store it whole in pass as `ivpn/wg-ha` and run
+`make ivpn-conf`. The key is account wide, so the tunnel can be moved
+between servers without a new config.
+
+Drive the tunnel with `ivpn-ctl` on ha, never systemctl: a tunnel that goes
+down any other way blocks exit node traffic rather than leaking it.
+
+- `ivpn-ctl server`, show the current server
+- `ivpn-ctl server gb`, move to another server, codes are the gateways in
+  IVPN's server list
+- `ivpn-ctl stop`, send exit node traffic straight out through the router
+- `ivpn-ctl start`, put it back through IVPN
+
+The Network dashboard has a switch for the tunnel and a server dropdown, HA
+drives both over ssh to its own host with a key that can only run
+`ivpn-ctl`.
 
 ## Home Assistant
 
@@ -72,9 +93,7 @@ One-time steps in the UI that setup.sh cannot do:
 
 The NAS `stuff` share is mounted on ha over SMB and shows in HA's Media
 browser as NAS. The Media browser only lists images, audio and video, use
-File Browser for everything else. Its admin login starts as admin/admin,
-change it in Settings > User management right after provisioning, it has
-write access to the whole share.
+File Browser for everything else.
 
 ## Taildrop
 
