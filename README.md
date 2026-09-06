@@ -59,11 +59,13 @@ One-time steps in the HA UI that setup.sh cannot do:
 - Add integrations: HACS, eero (plain eero login, not Amazon, then in
   Configure set both client filters to Exclude with empty lists to track
   every client), Glances for nas and gardener (host from `config`, port
-  61208, no auth).
+  61208, no auth), System Monitor for ha itself (its sensors are disabled
+  by default, enable processor use, load 1 min, processor temperature,
+  memory usage and disk usage / from the device page).
 
 The Network dashboard (`ha/homeassistant/dashboards/network.yaml`) lists
 eero devices with pause switches, speed test, and NAS and gardener health
-from Glances.
+from Glances, and ha's own from System Monitor.
 
 ## Glances
 

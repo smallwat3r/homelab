@@ -74,6 +74,21 @@ views:
             name: Tapo C100 CF21A0
           - entity: switch.c100e25325_wireless_capowifi_c100e25325_wireless_paused
             name: Tapo C100 E25325
+      # ha itself via the built-in System Monitor integration, the container
+      # is privileged so it reads the host's /proc and thermal zone
+      - type: entities
+        title: HA
+        entities:
+          - entity: sensor.system_monitor_processor_use
+            name: CPU
+          - entity: sensor.system_monitor_load_1_min
+            name: Load
+          - entity: sensor.system_monitor_processor_temperature
+            name: CPU temperature
+          - entity: sensor.system_monitor_memory_usage
+            name: Memory
+          - entity: sensor.system_monitor_disk_usage
+            name: SD card
       - type: entities
         title: NAS
         entities:
