@@ -20,13 +20,15 @@ if [[ -z "${token}" ]]; then
 fi
 readonly token
 
+# On failure the response body goes to stderr, Cloudflare puts the reason there
 cf() {
-  local method="$1" path="$2"
+  local method="$1" path="$2" out
   shift 2
   # header read from a file descriptor so the token stays off curl's argv
-  curl -sSf -X "${method}" "${API}${path}" \
+  out="$(curl -sS --fail-with-body -X "${method}" "${API}${path}" \
     -H @<(printf 'Authorization: Bearer %s\n' "${token}") \
-    -H "Content-Type: application/json" "$@"
+    -H "Content-Type: application/json" "$@")" || { printf '%s\n' "${out}" >&2; return 1; }
+  printf '%s\n' "${out}"
 }
 
 # Skips the API call in dry-run mode, silences the response otherwise
