@@ -133,16 +133,6 @@ views:
             name: Containers CPU
           - entity: sensor.192_168_4_78_containers_memory_used
             name: Containers memory
-      # NAS via the Glances integration, rename entities to match the ids HA
-      # generates once Glances is enabled in OMV and added in HA
-      - type: entities
-        title: NAS
-        entities:
-          - sensor.nas_cpu_used
-          - sensor.nas_memory_used_percent
-          - sensor.nas_disk_used_percent
-          - sensor.nas_containers_active
-          - sensor.nas_uptime
   - title: Gardener
     path: gardener
     cards:
