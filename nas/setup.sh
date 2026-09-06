@@ -25,6 +25,12 @@ stuff_share_uuid() {
     | python3 -c 'import json,sys; print(next(s["uuid"] for s in json.load(sys.stdin) if s["name"] == "stuff"))'
 }
 
+# Absolute path of the stuff share on disk, OMV returns it JSON-quoted
+stuff_share_path() {
+  sudo omv-rpc -u admin ShareMgmt getPath "{\"uuid\":\"$(stuff_share_uuid)\"}" \
+    | python3 -c 'import json,sys; print(json.load(sys.stdin).rstrip("/"))'
+}
+
 # OMV's File Browser plugin, a web file manager over the stuff share so it
 # can be browsed from a Home Assistant link. Settings go through OMV's RPC
 # like the UI does, so the web UI shows nothing pending afterwards.
@@ -74,6 +80,8 @@ main() {
   install_glances "${NAS_IP}"
   install_filebrowser
   install_filebrowser_path
+  # into the share, so sent files show up in File Browser and HA's /media/NAS
+  install_taildrop "$(stuff_share_path)/taildrop"
   log "done, add the Glances integration in HA with host ${NAS_IP}"
 }
 

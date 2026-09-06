@@ -171,6 +171,7 @@ main() {
   require_pi_user
   install_deps
   setup_subnet_router
+  install_taildrop "${HOME}/taildrop"
   install_docker
   mount_nas_share
   install_certificate

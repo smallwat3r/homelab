@@ -1,0 +1,15 @@
+# Pull Taildrop files into @DIR@ as they arrive, otherwise they sit in
+# tailscaled's inbox until someone runs tailscale file get by hand
+[Unit]
+Description=Receive Taildrop files into @DIR@
+After=tailscaled.service
+Requires=tailscaled.service
+
+[Service]
+User=@USER@
+ExecStart=/usr/bin/tailscale file get --wait --loop --conflict=rename @DIR@
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

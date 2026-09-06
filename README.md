@@ -85,6 +85,22 @@ dashboard. The plugin only listens on port 3670, so OMV's nginx proxies
 the base URL the plugin hardcodes (`nas/filebrowser-baseurl.conf`). Its admin login
 starts as admin/admin, change it in File Browser's settings on first login.
 
+## Taildrop
+
+Files sent over Tailscale to nas land in the `stuff` share under
+`taildrop/`, so they show up in File Browser and in HA's /media/NAS, files
+sent to ha land in /home/pi/taildrop. A `taildrop` systemd unit on each
+host runs `tailscale file get --loop` as pi, without it received files sit
+in tailscaled's inbox until pulled by hand. Send from any device on the
+tailnet, the phone and macOS apps use the share sheet, Windows has "Send
+with Tailscale" in the right-click menu, and on Linux:
+
+    tailscale file cp <file> nas:
+
+Files can only move between devices owned by the same tailnet user.
+For uploads from a browser, File Browser at /files on the NAS already
+does that over the same share.
+
 ## Glances
 
 nas and gardener run Glances as a read-only HTTP API on port 61208, bound
