@@ -7,7 +7,7 @@ HOST_gardener = pi@gardener.$(DOMAIN)
 PROVISION = provision-ha provision-nas provision-gardener
 GARDENER_SRC ?= $(HOME)/code/rpi-gardener
 
-.PHONY: help lint dns push provision $(PROVISION) deploy-gardener ha-sync ha-check ha-restart ha-update ha-logs status
+.PHONY: help lint dns push provision $(PROVISION) ivpn-conf deploy-gardener ha-sync ha-check ha-restart ha-update ha-logs status
 
 help:  ## Show this help menu
 	@grep -hE '^[a-zA-Z_%-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -27,6 +27,14 @@ cert-token-%:  ## Put the Cloudflare token from pass on a host for certbot, once
 	  | ssh $(HOST_$*) 'sudo install -d -m 0700 $(dir $(CF_CREDENTIALS)) \
 	    && { printf "dns_cloudflare_api_token = "; cat; } \
 	    | sudo sh -c "umask 077 && cat > $(CF_CREDENTIALS)"'
+
+# Table = 200 makes wg-quick put the tunnel's default route in table 200
+# instead of taking over ha's own routing, DNS is dropped so ha keeps its
+# resolvers (and wg-quick does not need resolvconf)
+ivpn-conf:  ## Put the IVPN WireGuard config from pass on ha, once. Generate it on ivpn.net, store as ivpn/wg-ha
+	pass show $(IVPN_PASS_ENTRY) | tr -d '\r' | sed '/^DNS/d; s/^\[Interface\]/&\nTable = 200/' \
+	  | ssh $(HOST_ha) 'sudo install -d -m 0700 $(dir $(IVPN_CONF)) \
+	    && sudo sh -c "umask 077 && cat > $(IVPN_CONF)"'
 
 push:  ## Copy the whole repo to a host (make push HOST=pi@nas.ts.smallwat3r.com)
 	rsync -a --delete --exclude .git --filter=':- .gitignore' ./ $(HOST):$(REMOTE_DIR)/
@@ -59,6 +67,6 @@ ha-logs:  ## Tail the Home Assistant container logs
 	ssh $(HOST_ha) 'docker logs -f --tail 100 homeassistant'
 
 status:  ## Quick health check of all hosts
-	ssh $(HOST_ha) 'docker ps --format "table {{.Names}}\t{{.Status}}"; tailscale status --self | head -1; systemctl is-active taildrop; sudo iptables -S FORWARD | sed -n 2p; findmnt -no SOURCE,FSTYPE /mnt/nas/stuff || echo "nas share not mounted"'
+	ssh $(HOST_ha) 'docker ps --format "table {{.Names}}\t{{.Status}}"; tailscale status --self | head -1; systemctl is-active taildrop wg-quick@ivpn | paste - -; sudo wg show ivpn latest-handshakes; sudo iptables -S FORWARD | sed -n 2p; findmnt -no SOURCE,FSTYPE /mnt/nas/stuff || echo "nas share not mounted"'
 	ssh $(HOST_nas) 'systemctl is-active glances pod-filebrowser taildrop | paste - - -; curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo'
 	ssh $(HOST_gardener) 'systemctl is-active glances; curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo'

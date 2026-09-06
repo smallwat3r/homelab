@@ -9,3 +9,5 @@ GLANCES_PORT=61208
 FILEBROWSER_PORT=3670
 CF_CREDENTIALS=/root/.secrets/cloudflare.ini
 CF_PASS_ENTRY=cloudflare/ts-dns
+IVPN_PASS_ENTRY=ivpn/wg-ha
+IVPN_CONF=/etc/wireguard/ivpn.conf

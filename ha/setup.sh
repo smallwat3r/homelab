@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Provision ha, the Raspberry Pi 4 acting as Tailscale subnet router and
-# exit node, and running Home Assistant Container.
+# exit node (going out through IVPN), and running Home Assistant Container.
 # Idempotent. Run as the pi user, from any directory: ./ha/setup.sh
 
 set -euo pipefail
@@ -11,6 +11,8 @@ readonly HOST_DIR
 source "${HOST_DIR}/../lib.sh"
 
 readonly LAN_SUBNET="192.168.4.0/24"
+# apt packages beyond what lib's shared installers bring, in one go
+readonly PACKAGES=(unzip ethtool wireguard-tools jq)
 readonly HACS_DIR="${HA_CONFIG_DIR}/custom_components/hacs"
 readonly HACS_ZIP_URL="https://github.com/hacs/integration/releases/latest/download/hacs.zip"
 readonly EERO_DIR="${HA_CONFIG_DIR}/custom_components/eero"
@@ -25,10 +27,14 @@ require_pi_user() {
 
 install_deps() {
   log "deps"
-  local cmd
-  for cmd in unzip ethtool; do
-    command -v "${cmd}" >/dev/null || sudo apt-get install -y "${cmd}"
+  local missing=()
+  local pkg
+  for pkg in "${PACKAGES[@]}"; do
+    dpkg -s "${pkg}" >/dev/null 2>&1 || missing+=("${pkg}")
   done
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "${missing[@]}"
+  fi
 }
 
 # On top of lib's install: forwarding sysctls, GRO tuning, and advertising
@@ -44,6 +50,50 @@ setup_subnet_router() {
   sudo systemctl daemon-reload
   sudo systemctl enable --now tailscale-gro.service
   sudo tailscale set --advertise-routes="${LAN_SUBNET}" --advertise-exit-node
+}
+
+# Devices that pick ha as exit node go out through an IVPN WireGuard
+# tunnel, so they need no IVPN client of their own and IVPN sees one device.
+# Plain wg-quick rather than the IVPN daemon, whose kill switch drops
+# everything in FORWARD that is not the tunnel, killing the subnet router.
+# The routing lives in the wg-quick drop-in, the config comes from
+# `make ivpn-conf`. Loose reverse path filtering, replies arriving on the
+# tunnel would otherwise fail the strict check against the main table.
+setup_ivpn_exit() {
+  log "ivpn"
+  if ! sudo test -f "${IVPN_CONF}"; then
+    echo "missing ${IVPN_CONF}, run 'make ivpn-conf' first" >&2
+    exit 1
+  fi
+  echo "net.ipv4.conf.all.rp_filter = 2" | sudo tee /etc/sysctl.d/99-ivpn.conf >/dev/null
+  sudo sysctl -q --system
+  sed "s|@LAN_SUBNET@|${LAN_SUBNET}|g" "${HOST_DIR}/tailscale/wg-quick-ivpn.conf" \
+    | sudo install -D -m 0644 /dev/stdin /etc/systemd/system/wg-quick@ivpn.service.d/routing.conf
+  sudo systemctl daemon-reload
+  sudo systemctl enable wg-quick@ivpn.service
+  # restart rather than enable --now so config and drop-in changes take effect
+  sudo systemctl restart wg-quick@ivpn.service
+
+  log "verify ivpn"
+  # a packet arriving on tailscale0 for the internet must leave via the tunnel
+  if ! sudo ip route get 1.1.1.1 from 100.64.0.1 iif tailscale0 | grep -q ' dev ivpn '; then
+    echo "exit node traffic is not routed into the ivpn tunnel" >&2
+    return 1
+  fi
+}
+
+# The NAS share is mounted on the host and bound into the HA container as
+# /media/NAS, HA Container has no network storage of its own
+mount_nas_share() {
+  log "nas share"
+  sudo install -d /mnt/nas/stuff
+  sed "s/@NAS_IP@/${NAS_IP}/" "${HOST_DIR}/mnt-nas-stuff.mount" \
+    | sudo tee /etc/systemd/system/mnt-nas-stuff.mount >/dev/null
+  sudo install -m 0644 "${HOST_DIR}/mnt-nas-stuff.automount" /etc/systemd/system/
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now mnt-nas-stuff.automount
+  # touching the path triggers the mount, a down NAS is not fatal here
+  timeout 10 ls /mnt/nas/stuff >/dev/null 2>&1 || echo "nas share not mounted yet, it mounts on first access" >&2
 }
 
 install_docker() {
@@ -85,6 +135,24 @@ install_eero() {
   rm -rf "${tmp}"
 }
 
+# The IVPN switch in HA: the container runs ssh against its own host with a
+# key whose forced command is ivpn-ctl, so it can start, stop and read the
+# tunnel and nothing else. Key and known_hosts live in the config dir,
+# which the container sees as /config, the ssh config comes from the repo.
+install_ivpn_switch() {
+  log "ivpn switch"
+  sudo install -m 0755 "${HOST_DIR}/ivpn-ctl" /usr/local/bin/
+  local ssh_dir="${HA_CONFIG_DIR}/.ssh"
+  [[ -f "${ssh_dir}/ivpn" ]] || ssh-keygen -q -t ed25519 -N "" -C "homeassistant ivpn switch" -f "${ssh_dir}/ivpn"
+  echo "127.0.0.1 $(cut -d' ' -f1,2 /etc/ssh/ssh_host_ed25519_key.pub)" > "${ssh_dir}/known_hosts"
+  local entry
+  entry="restrict,command=\"/usr/local/bin/ivpn-ctl\" $(cat "${ssh_dir}/ivpn.pub")"
+  install -d -m 0700 "${HOME}/.ssh"
+  grep -qxF "${entry}" "${HOME}/.ssh/authorized_keys" 2>/dev/null \
+    || echo "${entry}" >> "${HOME}/.ssh/authorized_keys"
+  chmod 0600 "${HOME}/.ssh/authorized_keys"
+}
+
 # HA serves TLS itself on 443 with the wildcard cert, mounted read-only by
 # the compose file. HTTP settings are store-managed in current HA (yaml http
 # blocks are ignored after first boot), so this is a one-time UI step:
@@ -102,7 +170,8 @@ install_home_assistant() {
   for f in automations scripts scenes; do
     [[ -f "${HA_CONFIG_DIR}/${f}.yaml" ]] || touch "${HA_CONFIG_DIR}/${f}.yaml"
   done
-  cp -r "${HOST_DIR}"/homeassistant/{dashboards,themes,www} "${HA_CONFIG_DIR}/"
+  cp -r "${HOST_DIR}"/homeassistant/{dashboards,themes,www,.ssh} "${HA_CONFIG_DIR}/"
+  install_ivpn_switch
   install_hacs
   install_eero
   docker compose --project-directory "${HA_DIR}" up -d
@@ -130,6 +199,7 @@ main() {
   require_pi_user
   install_deps
   setup_subnet_router
+  setup_ivpn_exit
   install_taildrop "${HOME}/taildrop"
   install_docker
   mount_nas_share

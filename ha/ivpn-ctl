@@ -1,0 +1,56 @@
+#!/bin/sh
+# Controls the IVPN tunnel. Forced command for Home Assistant's ssh key,
+# the only thing that key can run, and usable directly on ha:
+#   ivpn-ctl start|stop|status   on, the exit node goes through IVPN, off,
+#                                straight out through the router. status
+#                                exits non-zero when the tunnel is down,
+#                                which is how the HA switch reads it
+#   ivpn-ctl server              print the current server (gateway code
+#                                from IVPN's server list, fr, gb, ch...)
+#   ivpn-ctl server CODE         move the peer to that server's least
+#                                loaded host and restart the tunnel if up
+# The key pair in the config is account wide, only the peer changes.
+set -eu
+
+conf=/etc/wireguard/ivpn.conf
+cache="${HOME}/.cache/ivpn-servers.json"
+api=https://api.ivpn.net/v5/servers.json
+
+# shellcheck disable=SC2086
+set -- ${SSH_ORIGINAL_COMMAND:-${*:-status}}
+
+case "$1" in
+  start) exec sudo systemctl start wg-quick@ivpn ;;
+  stop)
+    sudo systemctl stop wg-quick@ivpn
+    # a deliberate stop drops the policy rule so exit traffic goes direct,
+    # start puts it back through the unit's drop-in. A tunnel that fails on
+    # its own keeps the rule and exit traffic is blocked, not leaked.
+    sudo ip rule del pref 5100 2>/dev/null || true
+    sudo ip -6 rule del pref 5100 2>/dev/null || true
+    exit 0 ;;
+  status) exec systemctl is-active --quiet wg-quick@ivpn ;;
+  server)
+    mkdir -p "$(dirname "${cache}")"
+    if [ $# -eq 1 ]; then
+      [ -s "${cache}" ] || curl -fsS "${api}" -o "${cache}"
+      ip="$(sudo sed -n 's/^Endpoint = \(.*\):.*/\1/p' "${conf}")"
+      exec jq -r --arg ip "${ip}" \
+        '.wireguard[] | select(any(.hosts[]; .host == $ip)) | .gateway | sub("\\.wg\\.ivpn\\.net$"; "")' "${cache}"
+    fi
+    case "$2" in
+      *[!a-z-]*|"") echo "ivpn-ctl: bad server code" >&2; exit 1 ;;
+    esac
+    curl -fsS "${api}" -o "${cache}"
+    host="$(jq -r --arg gw "$2.wg.ivpn.net" \
+      '.wireguard[] | select(.gateway == $gw) | .hosts | min_by(.load) | "\(.host) \(.public_key)"' "${cache}")"
+    if [ -z "${host}" ]; then
+      echo "ivpn-ctl: unknown server $2" >&2
+      exit 1
+    fi
+    # shellcheck disable=SC2086
+    set -- ${host}
+    sudo sed -i "s|^PublicKey = .*|PublicKey = $2|; s|^Endpoint = .*|Endpoint = $1:2049|" "${conf}"
+    exec sudo systemctl try-restart wg-quick@ivpn ;;
+  *) echo "ivpn-ctl: start, stop, status or server [CODE]" >&2; exit 1 ;;
+esac

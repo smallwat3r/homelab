@@ -7,7 +7,7 @@ targets.
 
 | Directory | Role |
 |-----------|------|
-| ha        | Tailscale subnet router and exit node, Home Assistant Container, TLS certificate |
+| ha        | Tailscale subnet router and exit node through IVPN, Home Assistant Container, TLS certificate |
 | nas       | OpenMediaVault, File Browser |
 | gardener  | rpi-gardener containers |
 
@@ -26,8 +26,28 @@ is why the records have to be public.
   over the `stuff` share
 - https://gardener.feist-corn.ts.net, rpi-gardener
 
-The only secret is the Cloudflare DNS token in pass as `cloudflare/ts-dns`,
-`make cert-token-<host>` copies it to ha and nas once for certbot.
+The secrets are the Cloudflare DNS token in pass as `cloudflare/ts-dns`,
+which `make cert-token-<host>` copies to ha and nas once for certbot, and
+the IVPN WireGuard config as `ivpn/wg-ha`, which `make ivpn-conf` copies to
+ha once.
+
+## IVPN
+
+ha's exit node goes out through an IVPN WireGuard tunnel, so any device
+that picks ha as its exit node is behind IVPN without running the IVPN
+client, and IVPN counts one device for all of them. ha's own traffic stays
+direct. Generate a WireGuard config on the IVPN account page (enable IPv6
+in the generator if it offers it, otherwise clients' IPv6 traffic is
+dropped rather than falling back), store it whole in pass as `ivpn/wg-ha`
+and run `make ivpn-conf`. The key is account wide, so `ivpn-ctl server gb`
+on ha moves the tunnel to another server (codes are the gateways in
+IVPN's server list, `ivpn-ctl server` shows the current one). `ivpn-ctl
+stop` sends exit node traffic straight out through the router instead,
+`ivpn-ctl start` puts it back through IVPN. Use those rather than
+systemctl: a tunnel that goes down any other way blocks exit node traffic
+rather than leaking it. The Network dashboard has a switch for the tunnel
+and a server dropdown, HA drives both over ssh to its own host with a key
+that can only run `ivpn-ctl`.
 
 ## Home Assistant
 

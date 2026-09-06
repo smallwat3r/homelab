@@ -20,6 +20,13 @@ views:
           - sensor.capowifi_upload_speed
           - button.capowifi_run_speed_test
       - type: entities
+        title: IVPN
+        entities:
+          - entity: switch.ivpn_tunnel
+            name: Exit node via IVPN
+          - entity: select.ivpn_server
+            name: Server
+      - type: entities
         title: Profiles
         entities:
           - switch.unassigned_capowifi_unassigned_paused

@@ -14,6 +14,43 @@ recorder:
   purge_keep_days: 3
   commit_interval: 30
 
+# The IVPN tunnel on the host, over ssh with a key restricted to ivpn-ctl,
+# see ha/setup.sh. The exit code of status is the switch state, the server
+# codes are gateways from IVPN's server list, edit the list to taste.
+command_line:
+  - switch:
+      name: IVPN tunnel
+      unique_id: ivpn_tunnel
+      icon: mdi:shield-lock
+      command_on: ssh -F /config/.ssh/config ha start
+      command_off: ssh -F /config/.ssh/config ha stop
+      command_state: ssh -F /config/.ssh/config ha status
+      scan_interval: 30
+  - sensor:
+      name: IVPN server
+      unique_id: ivpn_server
+      icon: mdi:earth
+      command: ssh -F /config/.ssh/config ha server
+      scan_interval: 60
+
+shell_command:
+  ivpn_server: ssh -F /config/.ssh/config ha server {{ server }}
+
+template:
+  - select:
+      name: IVPN server
+      unique_id: ivpn_server_select
+      icon: mdi:earth
+      state: "{{ states('sensor.ivpn_server') }}"
+      options: "{{ ['fr', 'gb', 'gb-man', 'ch', 'nl', 'de', 'se', 'us-ny'] }}"
+      select_option:
+        - action: shell_command.ivpn_server
+          data:
+            server: "{{ option }}"
+        - action: homeassistant.update_entity
+          target:
+            entity_id: sensor.ivpn_server
+
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
