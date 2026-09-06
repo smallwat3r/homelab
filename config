@@ -4,6 +4,7 @@ DOMAIN=ts.smallwat3r.com
 NAS_IP=192.168.4.76
 GARDENER_IP=192.168.4.78
 HA_DIR=/opt/homeassistant
+HA_CONFIG_DIR=/opt/homeassistant/config
 GLANCES_PORT=61208
 FILEBROWSER_PORT=3670
 CF_CREDENTIALS=/root/.secrets/cloudflare.ini

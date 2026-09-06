@@ -11,7 +11,6 @@ readonly HOST_DIR
 source "${HOST_DIR}/../lib.sh"
 
 readonly LAN_SUBNET="192.168.4.0/24"
-readonly HA_CONFIG_DIR="${HA_DIR}/config"
 readonly HACS_DIR="${HA_CONFIG_DIR}/custom_components/hacs"
 readonly HACS_ZIP_URL="https://github.com/hacs/integration/releases/latest/download/hacs.zip"
 readonly EERO_DIR="${HA_CONFIG_DIR}/custom_components/eero"
@@ -139,11 +138,7 @@ install_home_assistant() {
   for f in automations scripts scenes; do
     [[ -f "${HA_CONFIG_DIR}/${f}.yaml" ]] || touch "${HA_CONFIG_DIR}/${f}.yaml"
   done
-  install -d "${HA_CONFIG_DIR}/dashboards" "${HA_CONFIG_DIR}/themes" "${HA_CONFIG_DIR}/www/fonts"
-  install -m 0644 "${HOST_DIR}"/homeassistant/dashboards/*.yaml "${HA_CONFIG_DIR}/dashboards/"
-  install -m 0644 "${HOST_DIR}"/homeassistant/themes/*.yaml "${HA_CONFIG_DIR}/themes/"
-  install -m 0644 "${HOST_DIR}"/homeassistant/www/*.js "${HA_CONFIG_DIR}/www/"
-  install -m 0644 "${HOST_DIR}"/homeassistant/www/fonts/* "${HA_CONFIG_DIR}/www/fonts/"
+  cp -r "${HOST_DIR}"/homeassistant/{dashboards,themes,www} "${HA_CONFIG_DIR}/"
   install_hacs
   install_eero
   docker compose --project-directory "${HA_DIR}" up -d

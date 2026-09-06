@@ -33,8 +33,8 @@ The only secret is the Cloudflare DNS token in pass as `cloudflare/ts-dns`,
 
 Runtime state stays on the Pi under /opt/homeassistant. Repo-managed:
 compose.yaml, configuration.yaml, dashboards, the Terminal theme and the
-ocrab font. `make ha-sync` pushes them. HACS and eero are installed into
-custom_components by setup.sh.
+ocrab font. `make ha-sync` pushes them, `make ha-update` pulls the latest
+image. HACS and eero are installed into custom_components by setup.sh.
 
 One-time steps in the UI that setup.sh cannot do:
 

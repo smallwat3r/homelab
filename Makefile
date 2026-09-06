@@ -5,10 +5,9 @@ HOST_ha = pi@ha.$(DOMAIN)
 HOST_nas = pi@nas.$(DOMAIN)
 HOST_gardener = pi@gardener.$(DOMAIN)
 PROVISION = provision-ha provision-nas provision-gardener
-HA_CONFIG_DIR = $(HA_DIR)/config
 GARDENER_SRC ?= $(HOME)/code/rpi-gardener
 
-.PHONY: help dns cert-token push provision $(PROVISION) deploy-gardener ha-sync ha-check ha-restart ha-logs status
+.PHONY: help dns cert-token push provision $(PROVISION) deploy-gardener ha-sync ha-check ha-restart ha-update ha-logs status
 
 help:  ## Show this help menu
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -38,24 +37,20 @@ deploy-gardener:  ## Deploy the rpi-gardener app to the gardener Pi (clones the 
 	test -d $(GARDENER_SRC) || git clone https://github.com/smallwat3r/rpi-gardener.git $(GARDENER_SRC)
 	$(MAKE) -C $(GARDENER_SRC) deploy DEPLOY_HOST=$(HOST_gardener)
 
-ha-sync:  ## Push Home Assistant config and compose files, validate, then restart
-	$(MAKE) push HOST=$(HOST_ha)
-	ssh $(HOST_ha) 'cp $(REMOTE_DIR)/ha/homeassistant/compose.yaml $(HA_DIR)/ \
-	  && cp $(REMOTE_DIR)/ha/homeassistant/configuration.yaml $(HA_CONFIG_DIR)/ \
-	  && cp $(REMOTE_DIR)/ha/homeassistant/dashboards/*.yaml $(HA_CONFIG_DIR)/dashboards/ \
-	  && mkdir -p $(HA_CONFIG_DIR)/themes $(HA_CONFIG_DIR)/www/fonts \
-	  && cp $(REMOTE_DIR)/ha/homeassistant/themes/*.yaml $(HA_CONFIG_DIR)/themes/ \
-	  && cp $(REMOTE_DIR)/ha/homeassistant/www/*.js $(HA_CONFIG_DIR)/www/ \
-	  && cp $(REMOTE_DIR)/ha/homeassistant/www/fonts/* $(HA_CONFIG_DIR)/www/fonts/'
+ha-sync:  ## Push Home Assistant config and compose files, validate, then recreate the container
+	rsync -a --exclude compose.yaml ha/homeassistant/ $(HOST_ha):$(HA_CONFIG_DIR)/
+	rsync -a ha/homeassistant/compose.yaml $(HOST_ha):$(HA_DIR)/
 	$(MAKE) ha-check
-	ssh $(HOST_ha) 'docker compose --project-directory $(HA_DIR) up -d'
-	$(MAKE) ha-restart
+	ssh $(HOST_ha) 'docker compose --project-directory $(HA_DIR) up -d --force-recreate'
 
 ha-check:  ## Validate the Home Assistant config
 	ssh $(HOST_ha) 'docker exec homeassistant python -m homeassistant --script check_config -c /config'
 
 ha-restart:  ## Restart the Home Assistant container
 	ssh $(HOST_ha) 'docker compose --project-directory $(HA_DIR) restart'
+
+ha-update:  ## Pull the latest Home Assistant image and recreate the container
+	ssh $(HOST_ha) 'docker compose --project-directory $(HA_DIR) pull && docker compose --project-directory $(HA_DIR) up -d'
 
 ha-logs:  ## Tail the Home Assistant container logs
 	ssh $(HOST_ha) 'docker logs -f --tail 100 homeassistant'
