@@ -7,11 +7,14 @@ HOST_gardener = pi@gardener.$(DOMAIN)
 PROVISION = provision-ha provision-nas provision-gardener
 GARDENER_SRC ?= $(HOME)/code/rpi-gardener
 
-.PHONY: help dns cert-token push provision $(PROVISION) deploy-gardener ha-sync ha-check ha-restart ha-update ha-logs status
+.PHONY: help lint dns cert-token push provision $(PROVISION) deploy-gardener ha-sync ha-check ha-restart ha-update ha-logs status
 
 help:  ## Show this help menu
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "%-18s %s\n", $$1, $$2}'
+
+lint:  ## Shellcheck every script
+	shellcheck -x -s bash -P SCRIPTDIR lib.sh dns/sync.sh */setup.sh
 
 provision:  ## Provision every host in parallel (or provision-ha|nas|gardener), a down host doesn't block the rest
 	$(MAKE) -j3 -k -O $(PROVISION)
