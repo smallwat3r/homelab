@@ -8,7 +8,7 @@ IPs, paths).
 | Directory | Host     | Role |
 |-----------|----------|------|
 | ha        | ha       | Tailscale subnet router and exit node, Home Assistant Container, TLS certificate |
-| nas       | nas      | OpenMediaVault, Glances for HA |
+| nas       | nas      | OpenMediaVault, File Browser, Glances for HA |
 | gardener  | gardener | rpi-gardener containers, Glances for HA |
 
 Hosts are reached as `pi@<host>.ts.smallwat3r.com`, public A records that
@@ -76,6 +76,11 @@ automount, so a NAS that is down at boot only delays it) and binds it into
 the container as /media/NAS, where the Media browser and camera snapshot
 actions can use it. The share allows guest access, so no credentials are
 stored on ha.
+
+HA's Media browser only lists images, audio and video, so for a real file
+manager the NAS runs OMV's File Browser plugin on port 3670 over the same
+share, linked from the NAS tab of the Network dashboard. Its admin login
+starts as admin/admin, change it in File Browser's settings on first login.
 
 ## Glances
 

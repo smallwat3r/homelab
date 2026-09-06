@@ -62,5 +62,5 @@ ha-logs:  ## Tail the Home Assistant container logs
 
 status:  ## Quick health check of all hosts
 	ssh $(HOST_ha) 'docker ps --format "table {{.Names}}\t{{.Status}}"; tailscale status --self | head -1; sudo iptables -S FORWARD | sed -n 2p; findmnt -no SOURCE,FSTYPE /mnt/nas/stuff || echo "nas share not mounted"'
-	ssh $(HOST_nas) 'systemctl is-active glances; curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo'
+	ssh $(HOST_nas) 'systemctl is-active glances pod-filebrowser | paste - -; curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo'
 	ssh $(HOST_gardener) 'systemctl is-active glances; curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo'

@@ -133,6 +133,15 @@ views:
             name: Containers CPU
           - entity: sensor.192_168_4_78_containers_memory_used
             name: Containers memory
+  - title: NAS
+    path: nas
+    cards:
+      - type: button
+        name: Open files
+        icon: mdi:folder-open
+        tap_action:
+          action: url
+          url_path: http://nas.ts.smallwat3r.com:3670
   - title: Gardener
     path: gardener
     cards:
