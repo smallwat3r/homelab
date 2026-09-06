@@ -92,46 +92,46 @@ views:
       - type: entities
         title: NAS
         entities:
-          - entity: sensor.192_168_4_76_uptime
+          - entity: sensor.nas_uptime
             name: Uptime
-          - entity: sensor.192_168_4_76_cpu_usage
+          - entity: sensor.nas_cpu_usage
             name: CPU
-          - entity: sensor.192_168_4_76_cpu_load
+          - entity: sensor.nas_cpu_load
             name: Load
-          - entity: sensor.192_168_4_76_cpu_thermal_0_temperature
+          - entity: sensor.nas_cpu_thermal_0_temperature
             name: CPU temperature
-          - entity: sensor.192_168_4_76_memory_usage
+          - entity: sensor.nas_memory_usage
             name: Memory
-          - entity: sensor.192_168_4_76_disk_usage
+          - entity: sensor.nas_disk_usage
             name: SD card
-          - entity: sensor.192_168_4_76_srv_dev_disk_by_uuid_7458469d_2afa_4b57_b708_a9c015f7fddb_disk_usage
+          - entity: sensor.nas_srv_dev_disk_by_uuid_7458469d_2afa_4b57_b708_a9c015f7fddb_disk_usage
             name: Data disk
-          - entity: sensor.192_168_4_76_srv_dev_disk_by_uuid_7458469d_2afa_4b57_b708_a9c015f7fddb_disk_free
+          - entity: sensor.nas_srv_dev_disk_by_uuid_7458469d_2afa_4b57_b708_a9c015f7fddb_disk_free
             name: Data disk free
-          - entity: sensor.192_168_4_76_sda_disk_read
+          - entity: sensor.nas_sda_disk_read
             name: Data disk read
-          - entity: sensor.192_168_4_76_sda_disk_write
+          - entity: sensor.nas_sda_disk_write
             name: Data disk write
       - type: entities
         title: Gardener
         entities:
-          - entity: sensor.192_168_4_78_uptime
+          - entity: sensor.gardener_uptime
             name: Uptime
-          - entity: sensor.192_168_4_78_cpu_usage
+          - entity: sensor.gardener_cpu_usage
             name: CPU
-          - entity: sensor.192_168_4_78_cpu_load
+          - entity: sensor.gardener_cpu_load
             name: Load
-          - entity: sensor.192_168_4_78_cpu_thermal_0_temperature
+          - entity: sensor.gardener_cpu_thermal_0_temperature
             name: CPU temperature
-          - entity: sensor.192_168_4_78_memory_usage
+          - entity: sensor.gardener_memory_usage
             name: Memory
-          - entity: sensor.192_168_4_78_disk_usage
+          - entity: sensor.gardener_disk_usage
             name: SD card
-          - entity: sensor.192_168_4_78_containers_active
+          - entity: sensor.gardener_containers_active
             name: Containers running
-          - entity: sensor.192_168_4_78_containers_cpu_usage
+          - entity: sensor.gardener_containers_cpu_usage
             name: Containers CPU
-          - entity: sensor.192_168_4_78_containers_memory_used
+          - entity: sensor.gardener_containers_memory_used
             name: Containers memory
   - title: NAS
     path: nas
