@@ -125,8 +125,11 @@ install_home_assistant() {
   for f in automations scripts scenes; do
     [[ -f "${HA_CONFIG_DIR}/${f}.yaml" ]] || touch "${HA_CONFIG_DIR}/${f}.yaml"
   done
-  install -d "${HA_CONFIG_DIR}/dashboards"
+  install -d "${HA_CONFIG_DIR}/dashboards" "${HA_CONFIG_DIR}/themes" "${HA_CONFIG_DIR}/www/fonts"
   install -m 0644 "${HOST_DIR}"/homeassistant/dashboards/*.yaml "${HA_CONFIG_DIR}/dashboards/"
+  install -m 0644 "${HOST_DIR}"/homeassistant/themes/*.yaml "${HA_CONFIG_DIR}/themes/"
+  install -m 0644 "${HOST_DIR}"/homeassistant/www/*.js "${HA_CONFIG_DIR}/www/"
+  install -m 0644 "${HOST_DIR}"/homeassistant/www/fonts/* "${HA_CONFIG_DIR}/www/fonts/"
   install_hacs
   install_eero
   docker compose --project-directory "${HA_DIR}" up -d

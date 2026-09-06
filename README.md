@@ -62,6 +62,8 @@ One-time steps in the HA UI that setup.sh cannot do:
   61208, no auth), System Monitor for ha itself (its sensors are disabled
   by default, enable processor use, load 1 min, processor temperature,
   memory usage and disk usage / from the device page).
+- Profile > Themes: pick Terminal, the repo's theme in
+  `ha/homeassistant/themes` (ocrab font, flat dark cards).
 
 The Network dashboard (`ha/homeassistant/dashboards/network.yaml`) lists
 eero devices with pause switches, speed test, and NAS and gardener health

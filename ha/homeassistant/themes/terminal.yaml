@@ -1,0 +1,80 @@
+# Terminal look on the emacs creamy palette, flat square cards, ocrab
+# monospace everywhere. Colour names in comments are the X11 names creamy uses.
+Terminal:
+  primary-font-family: '"ocrab", monospace'
+  ha-font-family-body: var(--primary-font-family)
+  ha-font-family-heading: var(--primary-font-family)
+  ha-font-family-longform: var(--primary-font-family)
+  ha-font-family-code: var(--primary-font-family)
+  # ocrab runs wide, scale every ha-font-size-* token down a notch
+  ha-font-size-scale: 0.9
+
+  primary-color: "#a020f0"  # Purple, font-lock-keyword
+  accent-color: "#00868b"  # turquoise4, font-lock-string
+  light-primary-color: "#c488ff"  # show-paren-match
+  dark-primary-color: "#531d86"  # outline-1
+  rgb-green: "0, 139, 0"
+
+  primary-background-color: "#f5e4c1"  # default background
+  secondary-background-color: "#f5e4c1"
+  card-background-color: "#fff8dc"  # cornsilk, org-block
+  ha-card-background: var(--card-background-color)
+  primary-text-color: "#000000"
+  secondary-text-color: "#696969"  # grey41
+  disabled-text-color: "#969696"  # grey59
+  text-primary-color: "#ffffff"
+  divider-color: "#cdc8b1"  # cornsilk3
+  outline-color: "#cdc8b1"
+
+  # square everything
+  ha-border-radius-sm: 0
+  ha-border-radius-md: 0
+  ha-border-radius-lg: 0
+  ha-border-radius-xl: 0
+  ha-border-radius-2xl: 0
+  ha-border-radius-3xl: 0
+  ha-border-radius-4xl: 0
+  ha-border-radius-5xl: 0
+  ha-border-radius-6xl: 0
+  ha-border-radius-pill: 0
+  ha-border-radius-circle: 0
+  ha-card-border-radius: 0
+  ha-dialog-border-radius: 0
+  ha-card-border-width: 1px
+  ha-card-border-color: "#cdc8b1"
+  ha-card-box-shadow: none
+  ha-card-header-color: var(--primary-color)
+
+  app-header-background-color: "#f5e4c1"
+  app-header-text-color: "#000000"
+  app-header-border-bottom: 1px solid #cdc8b1
+  sidebar-background-color: "#f5e4c1"
+  sidebar-text-color: "#696969"
+  sidebar-icon-color: "#696969"
+  sidebar-selected-text-color: "#a020f0"
+  sidebar-selected-icon-color: "#a020f0"
+
+  state-icon-color: "#696969"
+  state-active-color: "#a020f0"
+  state-icon-active-color: "#a020f0"
+  switch-checked-color: "#a020f0"
+  switch-checked-button-color: "#a020f0"
+  switch-checked-track-color: "#c488ff"
+  switch-unchecked-button-color: "#696969"
+  switch-unchecked-track-color: "#cdc8b1"
+  input-fill-color: "#fff8dc"
+  input-ink-color: "#000000"
+  input-label-ink-color: "#696969"
+  input-idle-line-color: "#cdc8b1"
+  input-hover-line-color: "#a020f0"
+  mdc-theme-primary: "#a020f0"
+  mdc-theme-surface: "#fff8dc"
+  mdc-theme-on-surface: "#000000"
+  mdc-select-fill-color: "#fff8dc"
+  mdc-text-field-fill-color: "#fff8dc"
+  codemirror-background: "#fff8dc"
+
+  error-color: "#ee2c2c"  # firebrick2
+  warning-color: "#cd3700"  # OrangeRed3
+  success-color: "#008b00"  # green4
+  info-color: "#00008b"  # DarkBlue

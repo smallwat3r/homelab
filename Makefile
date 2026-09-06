@@ -42,7 +42,11 @@ ha-sync:  ## Push Home Assistant config files, validate, then restart
 	$(MAKE) push HOST=$(HOST_ha)
 	ssh $(HOST_ha) 'cp $(REMOTE_DIR)/ha/homeassistant/compose.yaml $(HA_DIR)/ \
 	  && cp $(REMOTE_DIR)/ha/homeassistant/configuration.yaml $(HA_CONFIG_DIR)/ \
-	  && cp $(REMOTE_DIR)/ha/homeassistant/dashboards/*.yaml $(HA_CONFIG_DIR)/dashboards/'
+	  && cp $(REMOTE_DIR)/ha/homeassistant/dashboards/*.yaml $(HA_CONFIG_DIR)/dashboards/ \
+	  && mkdir -p $(HA_CONFIG_DIR)/themes $(HA_CONFIG_DIR)/www/fonts \
+	  && cp $(REMOTE_DIR)/ha/homeassistant/themes/*.yaml $(HA_CONFIG_DIR)/themes/ \
+	  && cp $(REMOTE_DIR)/ha/homeassistant/www/*.js $(HA_CONFIG_DIR)/www/ \
+	  && cp $(REMOTE_DIR)/ha/homeassistant/www/fonts/* $(HA_CONFIG_DIR)/www/fonts/'
 	$(MAKE) ha-check ha-restart
 
 ha-check:  ## Validate the Home Assistant config
