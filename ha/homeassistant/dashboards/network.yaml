@@ -79,16 +79,32 @@ views:
       - type: entities
         title: HA
         entities:
+          - entity: sensor.system_monitor_uptime
+            name: Uptime
           - entity: sensor.system_monitor_processor_use
             name: CPU
-          - entity: sensor.system_monitor_load_1_min
-            name: Load
           - entity: sensor.system_monitor_processor_temperature
             name: CPU temperature
+          - entity: sensor.system_monitor_load_1_min
+            name: Load 1 min
+          - entity: sensor.system_monitor_load_5_min
+            name: Load 5 min
+          - entity: sensor.system_monitor_load_15_min
+            name: Load 15 min
           - entity: sensor.system_monitor_memory_usage
             name: Memory
+          - entity: sensor.system_monitor_memory_free
+            name: Memory free
+          - entity: sensor.system_monitor_swap_usage
+            name: Swap
           - entity: sensor.system_monitor_disk_usage
             name: SD card
+          - entity: sensor.system_monitor_disk_free
+            name: SD card free
+          - entity: sensor.system_monitor_network_throughput_in_eth0
+            name: Network in
+          - entity: sensor.system_monitor_network_throughput_out_eth0
+            name: Network out
       - type: entities
         title: NAS
         entities:
