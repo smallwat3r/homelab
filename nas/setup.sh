@@ -20,6 +20,11 @@ install_omv() {
   curl -fsSL https://github.com/OpenMediaVault-Plugin-Developers/installScript/raw/master/install | sudo bash
 }
 
+stuff_share_uuid() {
+  sudo omv-rpc -u admin ShareMgmt enumerateSharedFolders \
+    | python3 -c 'import json,sys; print(next(s["uuid"] for s in json.load(sys.stdin) if s["name"] == "stuff"))'
+}
+
 # OMV's File Browser plugin, a web file manager over the stuff share so it
 # can be browsed from a Home Assistant link. Settings go through OMV's RPC
 # like the UI does, so the web UI shows nothing pending afterwards.
@@ -28,11 +33,8 @@ install_filebrowser() {
   if ! dpkg -s openmediavault-filebrowser >/dev/null 2>&1; then
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openmediavault-filebrowser
   fi
-  local share
-  share="$(sudo omv-rpc -u admin ShareMgmt enumerateSharedFolders \
-    | python3 -c 'import json,sys; print(next(s["uuid"] for s in json.load(sys.stdin) if s["name"] == "stuff"))')"
   sudo omv-rpc -u admin FileBrowser set \
-    "{\"enable\":true,\"port\":${FILEBROWSER_PORT},\"sslcertificateref\":\"\",\"sharedfolderref\":\"${share}\"}" >/dev/null
+    "{\"enable\":true,\"port\":${FILEBROWSER_PORT},\"sslcertificateref\":\"\",\"sharedfolderref\":\"$(stuff_share_uuid)\"}" >/dev/null
   sudo omv-rpc -u admin Config applyChanges '{"modules":["filebrowser"],"force":false}' >/dev/null
 
   log "verify file browser"
@@ -44,11 +46,34 @@ install_filebrowser() {
   return 1
 }
 
+# Put File Browser behind OMV's nginx at /files, the bare port is still
+# open but the short URL is what HA links to
+install_filebrowser_path() {
+  log "file browser /files"
+  sudo install -D -m 0644 "${HOST_DIR}/filebrowser-baseurl.conf" \
+    /etc/systemd/system/container-filebrowser-app.service.d/baseurl.conf
+  sudo systemctl daemon-reload
+  sudo systemctl restart container-filebrowser-app.service
+  sed "s/@PORT@/${FILEBROWSER_PORT}/" "${HOST_DIR}/filebrowser-nginx.conf" \
+    | sudo tee /etc/nginx/openmediavault-webgui.d/filebrowser.conf >/dev/null
+  sudo nginx -t -q
+  sudo systemctl reload nginx
+
+  log "verify file browser /files"
+  for _ in {1..10}; do
+    [[ "$(curl -sf -m 3 http://127.0.0.1/files/)" == *"/files/public/static"* ]] && return
+    sleep 2
+  done
+  echo "file browser not answering on /files" >&2
+  return 1
+}
+
 main() {
   install_tailscale
   install_omv
   install_glances "${NAS_IP}"
   install_filebrowser
+  install_filebrowser_path
   log "done, add the Glances integration in HA with host ${NAS_IP}"
 }
 

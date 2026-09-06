@@ -78,8 +78,11 @@ actions can use it. The share allows guest access, so no credentials are
 stored on ha.
 
 HA's Media browser only lists images, audio and video, so for a real file
-manager the NAS runs OMV's File Browser plugin on port 3670 over the same
-share, linked from the NAS tab of the Network dashboard. Its admin login
+manager the NAS runs OMV's File Browser plugin over the same share at
+http://nas.ts.smallwat3r.com/files, linked from the NAS tab of the Network
+dashboard. The plugin only listens on port 3670, so OMV's nginx proxies
+/files to it (`nas/filebrowser-nginx.conf`) and a systemd drop-in patches
+the base URL the plugin hardcodes (`nas/filebrowser-baseurl.conf`). Its admin login
 starts as admin/admin, change it in File Browser's settings on first login.
 
 ## Glances
