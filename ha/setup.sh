@@ -79,7 +79,7 @@ mount_nas_share() {
   sudo systemctl daemon-reload
   sudo systemctl enable --now mnt-nas-stuff.automount
   # touching the path triggers the mount, a down NAS is not fatal here
-  ls /mnt/nas/stuff >/dev/null 2>&1 || echo "nas share not mounted yet, it mounts on first access" >&2
+  timeout 10 ls /mnt/nas/stuff >/dev/null 2>&1 || echo "nas share not mounted yet, it mounts on first access" >&2
 }
 
 install_docker() {
