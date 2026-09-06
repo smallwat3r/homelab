@@ -24,58 +24,15 @@ views:
         entities:
           - switch.unassigned_capowifi_unassigned_paused
           - sensor.unassigned_capowifi_unassigned_connected_clients
-      - type: entities
+      # every eero client, the profile trackers have no mac so they drop out
+      - type: markdown
         title: Devices
-        entities:
-          - entity: device_tracker.capo_wireless_capowifi_capo_wireless
-            name: ha
-          - entity: device_tracker.nas_wireless_capowifi_nas_wireless
-            name: nas
-          - entity: device_tracker.gardener_wireless_capowifi_gardener_wireless
-            name: gardener
-          - entity: device_tracker.retropie_wireless_capowifi_retropie_wireless
-            name: retropie
-          - entity: device_tracker.pi3a_wireless_capowifi_pi3a_wireless
-            name: pi3a
-          - entity: device_tracker.samsung_washer_wireless_capowifi_samsung_washer_wireless
-            name: Samsung washer
-          - entity: device_tracker.chromecast_wireless_capowifi_chromecast_wireless
-            name: Chromecast
-          - entity: device_tracker.rsm_wireless_capowifi_rsm_wireless
-            name: rsm
-          - entity: device_tracker.c110_wireless_capowifi_c110_wireless
-            name: Tapo C110
-          - entity: device_tracker.c100_cf21a0_wireless_capowifi_c100_cf21a0_wireless
-            name: Tapo C100 CF21A0
-          - entity: device_tracker.c100e25325_wireless_capowifi_c100e25325_wireless
-            name: Tapo C100 E25325
-      - type: entities
-        title: Pause
-        entities:
-          - entity: switch.capo_wireless_capowifi_capo_wireless_paused
-            name: ha
-          - entity: switch.nas_wireless_capowifi_nas_wireless_paused
-            name: nas
-          - entity: switch.gardener_wireless_capowifi_gardener_wireless_paused
-            name: gardener
-          - entity: switch.retropie_wireless_capowifi_retropie_wireless_paused
-            name: retropie
-          - entity: switch.pi3a_wireless_capowifi_pi3a_wireless_paused
-            name: pi3a
-          - entity: switch.samsung_washer_wireless_capowifi_samsung_washer_wireless_paused
-            name: Samsung washer
-          - entity: switch.chromecast_wireless_capowifi_chromecast_wireless_paused
-            name: Chromecast
-          - entity: switch.rsm_wireless_capowifi_rsm_wireless_paused
-            name: rsm
-          - entity: switch.c110_wireless_capowifi_c110_wireless_paused
-            name: Tapo C110
-          - entity: switch.c100_cf21a0_wireless_capowifi_c100_cf21a0_wireless_paused
-            name: Tapo C100 CF21A0
-          - entity: switch.c100e25325_wireless_capowifi_c100e25325_wireless_paused
-            name: Tapo C100 E25325
-      # ha itself via the built-in System Monitor integration, the container
-      # is privileged so it reads the host's /proc and thermal zone
+        content: |
+          | | Device | IP | Link |
+          |---|---|---|---|
+          {% for s in states.device_tracker | selectattr('attributes.mac', 'defined') | sort(attribute='name') | sort(attribute='state') -%}
+          | <ha-icon icon="mdi:{{ 'lan-connect' if s.state == 'home' else 'lan-disconnect' }}"></ha-icon> | {{ s.attributes.get('host_name') or s.name }} | {{ s.attributes.get('ip', '') }} | {{ s.attributes.get('connection_type', '') }} |
+          {% endfor %}
       - type: entities
         title: HA
         entities:
