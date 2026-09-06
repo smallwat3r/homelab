@@ -7,6 +7,13 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
+      # rslave so the share appears inside even when the NAS mounts after
+      # the container started
+      - type: bind
+        source: /mnt/nas/stuff
+        target: /media/NAS
+        bind:
+          propagation: rslave
     restart: unless-stopped
     privileged: true
     network_mode: host

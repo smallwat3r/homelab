@@ -1,0 +1,10 @@
+# Mounts the share on first access, so a NAS that is down when ha boots
+# only delays the mount instead of failing it
+[Unit]
+Description=Automount NAS stuff share
+
+[Automount]
+Where=/mnt/nas/stuff
+
+[Install]
+WantedBy=multi-user.target

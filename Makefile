@@ -38,7 +38,7 @@ deploy-gardener:  ## Deploy the rpi-gardener app to the gardener Pi (clones the 
 	test -d $(GARDENER_SRC) || git clone https://github.com/smallwat3r/rpi-gardener.git $(GARDENER_SRC)
 	$(MAKE) -C $(GARDENER_SRC) deploy DEPLOY_HOST=$(HOST_gardener)
 
-ha-sync:  ## Push Home Assistant config files, validate, then restart
+ha-sync:  ## Push Home Assistant config and compose files, validate, then restart
 	$(MAKE) push HOST=$(HOST_ha)
 	ssh $(HOST_ha) 'cp $(REMOTE_DIR)/ha/homeassistant/compose.yaml $(HA_DIR)/ \
 	  && cp $(REMOTE_DIR)/ha/homeassistant/configuration.yaml $(HA_CONFIG_DIR)/ \
@@ -47,7 +47,9 @@ ha-sync:  ## Push Home Assistant config files, validate, then restart
 	  && cp $(REMOTE_DIR)/ha/homeassistant/themes/*.yaml $(HA_CONFIG_DIR)/themes/ \
 	  && cp $(REMOTE_DIR)/ha/homeassistant/www/*.js $(HA_CONFIG_DIR)/www/ \
 	  && cp $(REMOTE_DIR)/ha/homeassistant/www/fonts/* $(HA_CONFIG_DIR)/www/fonts/'
-	$(MAKE) ha-check ha-restart
+	$(MAKE) ha-check
+	ssh $(HOST_ha) 'docker compose --project-directory $(HA_DIR) up -d'
+	$(MAKE) ha-restart
 
 ha-check:  ## Validate the Home Assistant config
 	ssh $(HOST_ha) 'docker exec homeassistant python -m homeassistant --script check_config -c /config'
@@ -59,6 +61,6 @@ ha-logs:  ## Tail the Home Assistant container logs
 	ssh $(HOST_ha) 'docker logs -f --tail 100 homeassistant'
 
 status:  ## Quick health check of all hosts
-	ssh $(HOST_ha) 'docker ps --format "table {{.Names}}\t{{.Status}}"; tailscale status --self | head -1; sudo iptables -S FORWARD | sed -n 2p'
+	ssh $(HOST_ha) 'docker ps --format "table {{.Names}}\t{{.Status}}"; tailscale status --self | head -1; sudo iptables -S FORWARD | sed -n 2p; findmnt -no SOURCE,FSTYPE /mnt/nas/stuff || echo "nas share not mounted"'
 	ssh $(HOST_nas) 'systemctl is-active glances; curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo'
 	ssh $(HOST_gardener) 'systemctl is-active glances; curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo'

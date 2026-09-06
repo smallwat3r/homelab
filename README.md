@@ -69,6 +69,14 @@ The Network dashboard (`ha/homeassistant/dashboards/network.yaml`) lists
 eero devices with pause switches, speed test, and NAS and gardener health
 from Glances, and ha's own from System Monitor.
 
+## NAS share in HA
+
+ha mounts the OMV `stuff` share over SMB at /mnt/nas/stuff (systemd
+automount, so a NAS that is down at boot only delays it) and binds it into
+the container as /media/NAS, where the Media browser and camera snapshot
+actions can use it. The share allows guest access, so no credentials are
+stored on ha.
+
 ## Glances
 
 nas and gardener run Glances as a read-only HTTP API on port 61208, bound

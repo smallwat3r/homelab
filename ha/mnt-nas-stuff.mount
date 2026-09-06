@@ -1,0 +1,14 @@
+# Installed by setup.sh, which fills in NAS_IP from config. Started on
+# demand by the matching .automount, never enabled directly.
+[Unit]
+Description=NAS stuff share
+After=network-online.target
+Wants=network-online.target
+
+[Mount]
+What=//@NAS_IP@/stuff
+Where=/mnt/nas/stuff
+Type=cifs
+# ponytail: guest, the share allows it and has no user ACL, switch to
+# credentials=/root/.secrets/smb.cred when the share gets locked down
+Options=guest,uid=1000,gid=1000,file_mode=0664,dir_mode=0775,iocharset=utf8,_netdev
