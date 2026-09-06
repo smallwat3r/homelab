@@ -149,6 +149,27 @@ views:
             name: Containers CPU
           - entity: sensor.gardener_containers_memory_used
             name: Containers memory
+  # Flexible Octopus on a non-smart meter, so rates only, the integration
+  # disables its consumption sensors without half-hourly reads
+  - title: Energy
+    path: energy
+    cards:
+      - type: entities
+        title: Octopus Energy
+        entities:
+          - entity: sensor.octopus_energy_electricity_d00a_32408_1200028140100_current_rate
+            name: Unit rate
+          - entity: sensor.octopus_energy_electricity_d00a_32408_1200028140100_current_standing_charge
+            name: Standing charge
+          - entity: sensor.octopus_energy_a_300dff0f_wheel_of_fortune_spins_electricity
+            name: Wheel of fortune spins, electricity
+          - entity: sensor.octopus_energy_a_300dff0f_wheel_of_fortune_spins_gas
+            name: Wheel of fortune spins, gas
+      - type: calendar
+        title: Octoplus power downs
+        initial_view: listWeek
+        entities:
+          - calendar.octopus_energy_a_300dff0f_octoplus_power_down
   - title: NAS
     path: nas
     cards:

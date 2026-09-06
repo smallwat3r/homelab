@@ -43,6 +43,8 @@ One-time steps in the UI that setup.sh cannot do:
 - Add integrations: HACS, eero, Glances for nas and gardener (LAN IP from
   `config`, port 61208), System Monitor for ha. System Monitor's sensors
   are disabled by default, enable the ones on the Network dashboard.
+- HACS > Integrations: Octopus Energy, then add it with the API key and
+  account number from the Octopus account page.
 - Rename the two Glances devices to `nas` and `gardener`, accepting the
   entity id rename, the Network dashboard uses `sensor.nas_*` and
   `sensor.gardener_*` rather than ids built from the LAN IPs.
