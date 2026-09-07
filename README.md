@@ -10,7 +10,7 @@ lists the targets.
 |-----------|------|
 | ha        | Tailscale subnet router and exit node through IVPN, Home Assistant Container, TLS certificate |
 | nas       | OpenMediaVault, File Browser |
-| gardener  | rpi-gardener containers |
+| gardener  | rpi-gardener containers, TLS certificate for its nginx |
 
 Every target reaches a host as `pi@<host>.ts.smallwat3r.com`, so a fresh
 Pi needs Tailscale installed and joined to the tailnet, then `make dns`,
@@ -20,7 +20,7 @@ before `make provision-<host>` works. `make provision` does all three.
 
 Everything lives on the tailnet, nothing is reachable from the internet.
 `<host>.ts.smallwat3r.com` are public A records in Cloudflare that point at
-the tailnet IPs, public because ha and nas each run certbot for a Let's
+the tailnet IPs, public because each host runs certbot for a Let's
 Encrypt wildcard on `*.ts.smallwat3r.com` via the DNS-01 challenge. They
 resolve anywhere but only answer from a device on the tailnet. `make dns`
 keeps them in sync, Tailscale's split DNS sends the domain to Cloudflare's
@@ -29,7 +29,9 @@ resolvers.
 - https://ha.ts.smallwat3r.com, Home Assistant
 - https://nas.ts.smallwat3r.com, OpenMediaVault, `/files` is File Browser
   over the `stuff` share
-- https://gardener.feist-corn.ts.net, rpi-gardener
+- https://gardener.ts.smallwat3r.com, rpi-gardener, deploy it with
+  `make deploy-gardener` before `make provision-gardener`, which puts the
+  certificate into its nginx
 
 File Browser's admin login starts as admin/admin, change it in Settings >
 User management right after provisioning, it has write access to the whole
@@ -41,7 +43,7 @@ Both live in pass and are copied to the host once, setup.sh never touches
 them.
 
 - `cloudflare/ts-dns`, the Cloudflare DNS token for certbot,
-  `make cert-token-ha` and `make cert-token-nas`
+  `make cert-token-ha`, `make cert-token-nas` and `make cert-token-gardener`
 - `ivpn/wg-ha`, the IVPN WireGuard config, `make ivpn-conf`
 
 ## IVPN

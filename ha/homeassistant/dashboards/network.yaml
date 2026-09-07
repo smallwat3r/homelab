@@ -151,4 +151,4 @@ views:
         icon: mdi:sprout
         tap_action:
           action: url
-          url_path: https://gardener.feist-corn.ts.net
+          url_path: https://gardener.ts.smallwat3r.com
