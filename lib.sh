@@ -5,6 +5,17 @@ source "$(dirname "${BASH_SOURCE[0]}")/config"
 
 log() { printf '==> %s\n' "$*"; }
 
+# Run a command up to N times, two seconds apart, until it succeeds
+retry() {
+  local n="$1" i
+  shift
+  for ((i = 0; i < n; i++)); do
+    "$@" && return
+    sleep 2
+  done
+  return 1
+}
+
 # Every host joins the tailnet directly, even though ha's subnet routing
 # already reaches them, so remote access survives ha being down
 install_tailscale() {
@@ -86,10 +97,6 @@ install_glances() {
   sudo systemctl restart glances.service
 
   log "verify glances"
-  for _ in {1..10}; do
-    curl -sf -m 3 "http://${ip}:${GLANCES_PORT}/api/4/status" >/dev/null && return
-    sleep 2
-  done
-  echo "glances api not answering on ${ip}:${GLANCES_PORT}" >&2
-  return 1
+  retry 10 curl -sf -m 3 -o /dev/null "http://${ip}:${GLANCES_PORT}/api/4/status" \
+    || { echo "glances api not answering on ${ip}:${GLANCES_PORT}" >&2; return 1; }
 }

@@ -23,13 +23,9 @@ install_app_certificate() {
   log "verify certificate"
   # --resolve sends the real name as SNI to the local nginx, curl then
   # checks the chain against the system CAs, so a self-signed cert fails
-  for _ in {1..5}; do
-    curl -sf -m 5 -o /dev/null --resolve "gardener.${DOMAIN}:443:127.0.0.1" \
-      "https://gardener.${DOMAIN}/health" && return
-    sleep 2
-  done
-  echo "https://gardener.${DOMAIN} is not serving a trusted certificate" >&2
-  return 1
+  retry 5 curl -sf -m 5 -o /dev/null --resolve "gardener.${DOMAIN}:443:127.0.0.1" \
+    "https://gardener.${DOMAIN}/health" \
+    || { echo "https://gardener.${DOMAIN} is not serving a trusted certificate" >&2; return 1; }
 }
 
 main() {

@@ -184,15 +184,8 @@ verify_forwarding() {
   if [[ "$(sudo iptables -S FORWARD | sed -n 2p)" != "-A FORWARD -j ts-forward" ]]; then
     sudo systemctl restart tailscaled
   fi
-
-  for _ in {1..10}; do
-    if sudo iptables -S FORWARD | sed -n 2p | grep -q ts-forward; then
-      return
-    fi
-    sleep 1
-  done
-  echo "ts-forward is not ahead of DOCKER-USER in the FORWARD chain" >&2
-  return 1
+  retry 10 bash -c 'sudo iptables -S FORWARD | sed -n 2p | grep -q ts-forward' \
+    || { echo "ts-forward is not ahead of DOCKER-USER in the FORWARD chain" >&2; return 1; }
 }
 
 main() {

@@ -44,12 +44,8 @@ install_filebrowser() {
   sudo omv-rpc -u admin Config applyChanges '{"modules":["filebrowser"],"force":false}' >/dev/null
 
   log "verify file browser"
-  for _ in {1..10}; do
-    curl -sf -m 3 -o /dev/null "http://127.0.0.1:${FILEBROWSER_PORT}/" && return
-    sleep 2
-  done
-  echo "file browser not answering on port ${FILEBROWSER_PORT}" >&2
-  return 1
+  retry 10 curl -sf -m 3 -o /dev/null "http://127.0.0.1:${FILEBROWSER_PORT}/" \
+    || { echo "file browser not answering on port ${FILEBROWSER_PORT}" >&2; return 1; }
 }
 
 # Put File Browser behind OMV's nginx at /files, the bare port is still
@@ -66,12 +62,8 @@ install_filebrowser_path() {
   sudo systemctl reload nginx
 
   log "verify file browser /files"
-  for _ in {1..10}; do
-    [[ "$(curl -sf -m 3 http://127.0.0.1/files/)" == *"/files/public/static"* ]] && return
-    sleep 2
-  done
-  echo "file browser not answering on /files" >&2
-  return 1
+  retry 10 bash -c 'curl -sf -m 3 http://127.0.0.1/files/ | grep -q /files/public/static' \
+    || { echo "file browser not answering on /files" >&2; return 1; }
 }
 
 # The wildcard is loaded into OMV's certificate store by omv-cert, which is
