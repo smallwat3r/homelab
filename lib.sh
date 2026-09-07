@@ -60,7 +60,7 @@ install_certificate() {
     --deploy-hook "${hook}"
 }
 
-# Install glances from HOST_DIR's glances.conf and glances.service, then wait
+# Install glances from the shared glances.conf and HOST_DIR's glances.service, then wait
 # for its API to answer on the given LAN address. Extra apt packages can be
 # passed after the address.
 # Deliberately the LAN IP, not <host>.DOMAIN over the tailnet: HA and the
@@ -79,7 +79,7 @@ install_glances() {
   # the unit reads BIND from here, keeping the address out of the unit file
   echo "BIND=${ip}" | sudo tee /etc/default/glances >/dev/null
   sudo install -m 0644 "${HOST_DIR}/glances.service" /etc/systemd/system/
-  sudo install -D -m 0644 "${HOST_DIR}/glances.conf" /etc/glances/glances.conf
+  sudo install -D -m 0644 "${HOST_DIR}/../glances.conf" /etc/glances/glances.conf
   sudo systemctl daemon-reload
   sudo systemctl enable glances.service
   # restart rather than enable --now so config changes always take effect
