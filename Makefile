@@ -66,7 +66,21 @@ ha-update:  ## Pull the latest Home Assistant image and recreate the container
 ha-logs:  ## Tail the Home Assistant container logs
 	ssh $(HOST_ha) 'docker logs -f --tail 100 homeassistant'
 
+# What each host runs for make status, one command per line. units prints
+# name and state per unit, handshake the age of the last IVPN handshake
+units = for u in $(1); do printf "%-16s %s\n" $$u $$(systemctl is-active $$u); done
+STATUS_ha = docker ps --format "table {{.Names}}\t{{.Status}}"; \
+  tailscale status --self | head -1; \
+  $(call units,taildrop wg-quick@ivpn certbot.timer); \
+  echo "ivpn handshake   $$(( $$(date +%s) - $$(sudo wg show ivpn latest-handshakes | cut -f2) ))s ago"; \
+  sudo iptables -S FORWARD | sed -n 2p; \
+  findmnt -t cifs -no SOURCE,FSTYPE /mnt/nas/stuff || echo "nas share not mounted"
+STATUS_nas = $(call units,glances pod-filebrowser taildrop certbot.timer); \
+  curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo
+STATUS_gardener = $(call units,glances certbot.timer); \
+  curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo
+
 status:  ## Quick health check of all hosts
-	ssh $(HOST_ha) 'docker ps --format "table {{.Names}}\t{{.Status}}"; tailscale status --self | head -1; systemctl is-active taildrop wg-quick@ivpn | paste - -; sudo wg show ivpn latest-handshakes; sudo iptables -S FORWARD | sed -n 2p; findmnt -no SOURCE,FSTYPE /mnt/nas/stuff || echo "nas share not mounted"'
-	ssh $(HOST_nas) 'systemctl is-active glances pod-filebrowser taildrop | paste - - -; curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo'
-	ssh $(HOST_gardener) 'systemctl is-active glances; curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo'
+	@echo "== ha"; ssh $(HOST_ha) '$(STATUS_ha)'
+	@echo "== nas"; ssh $(HOST_nas) '$(STATUS_nas)'
+	@echo "== gardener"; ssh $(HOST_gardener) '$(STATUS_gardener)'
