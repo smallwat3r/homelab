@@ -37,7 +37,7 @@ ivpn-conf:  ## Put the IVPN WireGuard config from pass on ha, once. Generate it 
 	    && sudo sh -c "umask 077 && cat > $(IVPN_CONF)"'
 
 push:  ## Copy the whole repo to a host (make push HOST=pi@nas.ts.smallwat3r.com)
-	rsync -a --delete --exclude .git --filter=':- .gitignore' ./ $(HOST):$(REMOTE_DIR)/
+	rsync -a --delete --exclude .git ./ $(HOST):$(REMOTE_DIR)/
 
 $(PROVISION): provision-%:
 	$(MAKE) push HOST=$(HOST_$*)
