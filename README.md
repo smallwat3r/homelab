@@ -9,7 +9,7 @@ lists the targets.
 | Directory | Role |
 |-----------|------|
 | ha        | Tailscale subnet router and exit node through IVPN, Home Assistant Container, TLS certificate |
-| nas       | OpenMediaVault, File Browser |
+| nas       | OpenMediaVault, File Browser, Forgejo mirroring GitHub |
 | gardener  | rpi-gardener containers, TLS certificate for its nginx |
 
 Every target reaches a host as `pi@<host>.ts.smallwat3r.com`, so a fresh
@@ -28,7 +28,7 @@ resolvers.
 
 - https://ha.ts.smallwat3r.com, Home Assistant
 - https://nas.ts.smallwat3r.com, OpenMediaVault, `/files` is File Browser
-  over the `stuff` share
+  over the `stuff` share, `/git` is Forgejo
 - https://gardener.ts.smallwat3r.com, rpi-gardener, deploy it with
   `make deploy-gardener` before `make provision-gardener`, which puts the
   certificate into its nginx
@@ -45,6 +45,9 @@ them.
 - `cloudflare/ts-dns`, the Cloudflare DNS token for certbot,
   `make cert-token-ha`, `make cert-token-nas` and `make cert-token-gardener`
 - `ivpn/wg-ha`, the IVPN WireGuard config, `make ivpn-conf`
+- `github/forgejo-mirror`, a GitHub token that can read every repo (classic
+  `repo` scope, or fine-grained with Contents and Metadata read on all
+  repos), `make github-token`
 
 ## IVPN
 
@@ -71,6 +74,19 @@ down any other way blocks exit node traffic rather than leaking it.
 The Network dashboard has a switch for the tunnel and a server dropdown, HA
 drives both over ssh to its own host with a key that can only run
 `ivpn-ctl`.
+
+## Forgejo
+
+A pull mirror of every GitHub repo the account owns, forks excluded, on
+the NAS disk under `forgejo/` next to the share. Forgejo runs as a podman
+quadlet, HTTPS only, and `forgejo-mirror` adds any repo GitHub has that
+Forgejo does not, daily from cron and from `make forgejo-mirror`. Forgejo
+resyncs each mirror every 8 hours. Mirrors are read-only, keep pushing to
+GitHub as usual, issues and pull requests are not mirrored.
+
+The first provision prints the owner's random password, the web UI asks to
+change it on first login. Registration is off, add users from Site
+administration.
 
 ## Home Assistant
 

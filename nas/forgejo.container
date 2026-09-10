@@ -1,0 +1,30 @@
+# Forgejo as a podman quadlet, systemd builds forgejo.service from this.
+# setup.sh fills in @DIR@ (on the NAS disk, not the SD card), @PORT@ and
+# @DOMAIN@. Config goes in as FORGEJO__section__KEY environment variables,
+# the image writes them into app.ini on every start, so this file is the
+# source of truth and the web installer is skipped (INSTALL_LOCK).
+[Unit]
+Description=Forgejo
+RequiresMountsFor=@DIR@
+
+[Container]
+Image=codeberg.org/forgejo/forgejo:16
+ContainerName=forgejo
+Volume=@DIR@:/data
+PublishPort=127.0.0.1:@PORT@:3000
+Environment=FORGEJO__server__DOMAIN=nas.@DOMAIN@
+Environment=FORGEJO__server__ROOT_URL=https://nas.@DOMAIN@/git/
+# HTTPS only, mirrors are read-only anyway. To push over ssh add
+# SSH_PORT=2222, PublishPort=2222:22 and drop this line
+Environment=FORGEJO__server__DISABLE_SSH=true
+Environment=FORGEJO__database__DB_TYPE=sqlite3
+Environment=FORGEJO__security__INSTALL_LOCK=true
+Environment=FORGEJO__service__DISABLE_REGISTRATION=true
+
+[Service]
+Restart=always
+# first start pulls the image
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target

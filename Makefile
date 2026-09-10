@@ -7,7 +7,7 @@ HOST_gardener = pi@gardener.$(DOMAIN)
 PROVISION = provision-ha provision-nas provision-gardener
 GARDENER_SRC ?= $(HOME)/code/rpi-gardener
 
-.PHONY: help lint dns push provision $(PROVISION) ivpn-conf deploy-gardener ha-sync ha-check ha-restart ha-update ha-logs status
+.PHONY: help lint dns push provision $(PROVISION) ivpn-conf deploy-gardener github-token forgejo-mirror ha-sync ha-check ha-restart ha-update ha-logs status
 
 help:  ## Show this help menu
 	@grep -hE '^[a-zA-Z_%-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -27,6 +27,14 @@ cert-token-%:  ## Put the Cloudflare token from pass on a host for certbot, once
 	  | ssh $(HOST_$*) 'sudo install -d -m 0700 $(dir $(CF_CREDENTIALS)) \
 	    && { printf "dns_cloudflare_api_token = "; cat; } \
 	    | sudo sh -c "umask 077 && cat > $(CF_CREDENTIALS)"'
+
+github-token:  ## Put the GitHub token from pass on nas for Forgejo's mirrors, once
+	pass show $(GH_PASS_ENTRY) | head -1 | tr -d '\r' \
+	  | ssh $(HOST_nas) 'sudo install -d -m 0700 $(dir $(GH_CREDENTIALS)) \
+	    && sudo sh -c "umask 077 && cat > $(GH_CREDENTIALS)"'
+
+forgejo-mirror:  ## Add mirrors for GitHub repos Forgejo does not have yet (also runs daily on nas)
+	ssh $(HOST_nas) 'sudo forgejo-mirror'
 
 # Table = 200 makes wg-quick put the tunnel's default route in table 200
 # instead of taking over ha's own routing, DNS is dropped so ha keeps its

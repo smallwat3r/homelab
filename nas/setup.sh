@@ -66,6 +66,59 @@ install_filebrowser_path() {
     || { echo "file browser not answering on /files" >&2; return 1; }
 }
 
+# Forgejo as a podman quadlet with its data on the NAS disk. The owner and
+# their API token are created once through the CLI, the password is random
+# and printed here, the web installer is locked out by the quadlet's config.
+install_forgejo() {
+  local dir="$1"
+  log "forgejo"
+  sudo install -d "${dir}"
+  sed "s|@DIR@|${dir}|g; s|@PORT@|${FORGEJO_PORT}|g; s|@DOMAIN@|${DOMAIN}|g" "${HOST_DIR}/forgejo.container" \
+    | sudo tee /etc/containers/systemd/forgejo.container >/dev/null
+  sudo systemctl daemon-reload
+  # restart rather than start so quadlet changes always take effect
+  sudo systemctl restart forgejo.service
+
+  log "verify forgejo"
+  retry 30 curl -sf -m 3 -o /dev/null "http://127.0.0.1:${FORGEJO_PORT}/api/v1/version" \
+    || { echo "forgejo not answering on port ${FORGEJO_PORT}" >&2; return 1; }
+  if ! sudo podman exec -u git forgejo forgejo admin user list | grep -qw "${FORGEJO_USER}"; then
+    log "forgejo user ${FORGEJO_USER}, change the password below on first login"
+    sudo podman exec -u git forgejo forgejo admin user create --admin --random-password \
+      --must-change-password --username "${FORGEJO_USER}" --email "${FORGEJO_USER}@nas.${DOMAIN}"
+  fi
+  if ! sudo test -f "${FORGEJO_TOKEN}"; then
+    log "forgejo api token"
+    sudo podman exec -u git forgejo forgejo admin user generate-access-token --raw \
+      --username "${FORGEJO_USER}" --token-name mirror --scopes write:repository,read:user \
+      | sudo sh -c "umask 077 && cat > ${FORGEJO_TOKEN}"
+  fi
+}
+
+# Put Forgejo behind OMV's nginx at /git, the bare port only listens on
+# localhost
+install_forgejo_path() {
+  log "forgejo /git"
+  sed "s/@PORT@/${FORGEJO_PORT}/" "${HOST_DIR}/forgejo-nginx.conf" \
+    | sudo tee /etc/nginx/openmediavault-webgui.d/forgejo.conf >/dev/null
+  sudo nginx -t -q
+  sudo systemctl reload nginx
+
+  log "verify forgejo /git"
+  retry 10 curl -sf -m 3 -o /dev/null "http://127.0.0.1/git/api/v1/version" \
+    || { echo "forgejo not answering on /git" >&2; return 1; }
+}
+
+# Mirror every GitHub repo into Forgejo, daily from cron for new repos and
+# once now. Needs the GitHub token from `make github-token`, skips without it.
+install_forgejo_mirror() {
+  log "forgejo mirror"
+  sed "s|@PORT@|${FORGEJO_PORT}|g; s|@USER@|${FORGEJO_USER}|g; s|@GH_CREDENTIALS@|${GH_CREDENTIALS}|g; s|@FORGEJO_TOKEN@|${FORGEJO_TOKEN}|g" \
+    "${HOST_DIR}/forgejo-mirror.py" | sudo install -m 0755 /dev/stdin /usr/local/sbin/forgejo-mirror
+  sudo ln -sf /usr/local/sbin/forgejo-mirror /etc/cron.daily/forgejo-mirror
+  sudo forgejo-mirror
+}
+
 # The wildcard is loaded into OMV's certificate store by omv-cert, which is
 # also certbot's deploy hook so renewals land in the web UI on their own
 install_omv_certificate() {
@@ -83,6 +136,10 @@ main() {
   install_glances "${NAS_IP}"
   install_filebrowser
   install_filebrowser_path
+  # on the disk next to the share, not in it, so it is not browsable or writable from File Browser
+  install_forgejo "$(dirname "$(stuff_share_path)")/forgejo"
+  install_forgejo_path
+  install_forgejo_mirror
   # into the share, so sent files show up in File Browser and HA's /media/NAS
   install_taildrop "$(stuff_share_path)/taildrop"
   log "done, https://nas.${DOMAIN}"
