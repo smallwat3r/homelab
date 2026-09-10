@@ -5,7 +5,7 @@
 # Runs as certbot's deploy hook on renewal and once from setup.sh, which
 # fills in @DOMAIN@. nginx picks the cert per handshake (SNI variable), so
 # no reload is needed.
-# ponytail: overwrites the app's self-signed server.* rather than teaching
+# overwrites the app's self-signed server.* rather than teaching
 # its SNI map about this domain, gardener.local gets the wildcard too
 set -eu
 

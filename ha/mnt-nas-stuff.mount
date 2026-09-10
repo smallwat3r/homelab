@@ -9,6 +9,6 @@ Wants=network-online.target
 What=//@NAS_IP@/stuff
 Where=/mnt/nas/stuff
 Type=cifs
-# ponytail: guest, the share allows it and has no user ACL, switch to
+# guest, the share allows it and has no user ACL, switch to
 # credentials=/root/.secrets/smb.cred when the share gets locked down
 Options=guest,uid=1000,gid=1000,file_mode=0664,dir_mode=0775,iocharset=utf8,_netdev
