@@ -83,7 +83,7 @@ STATUS_ha = docker ps --format "table {{.Names}}\t{{.Status}}"; \
   echo "ivpn handshake   $$(( $$(date +%s) - $$(sudo wg show ivpn latest-handshakes | cut -f2) ))s ago"; \
   sudo iptables -S FORWARD | sed -n 2p; \
   findmnt -t cifs -no SOURCE,FSTYPE /mnt/nas/stuff || echo "nas share not mounted"
-STATUS_nas = $(call units,glances pod-filebrowser taildrop certbot.timer); \
+STATUS_nas = $(call units,glances pod-filebrowser forgejo taildrop certbot.timer); \
   curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo
 STATUS_gardener = $(call units,glances certbot.timer); \
   curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo
