@@ -9,12 +9,13 @@ import os
 import re
 import subprocess
 from pathlib import Path
+from typing import Any
 
 LINEAGE = Path(os.environ.get("RENEWED_LINEAGE", "/etc/letsencrypt/live/@DOMAIN@"))
 COMMENT = "letsencrypt *.@DOMAIN@"
 
 
-def rpc(service, method, params):
+def rpc(service: str, method: str, params: dict[str, Any]) -> Any:
     out = subprocess.run(
         ["omv-rpc", "-u", "admin", service, method, json.dumps(params)],
         check=True, capture_output=True, text=True,
@@ -22,12 +23,14 @@ def rpc(service, method, params):
     return json.loads(out) if out.strip() else None
 
 
-def main():
+def main() -> None:
     # OMV's marker uuid for "create a new object" in set calls
-    new_uuid = re.search(
+    match = re.search(
         r'^OMV_CONFIGOBJECT_NEW_UUID="([^"]+)"',
         Path("/etc/default/openmediavault").read_text(), re.M,
-    ).group(1)
+    )
+    assert match, "OMV_CONFIGOBJECT_NEW_UUID missing from /etc/default/openmediavault"
+    new_uuid = match.group(1)
 
     certs = rpc("CertificateMgmt", "getList", {"start": 0, "limit": -1})["data"]
     uuid = next((c["uuid"] for c in certs if c["comment"] == COMMENT), new_uuid)
