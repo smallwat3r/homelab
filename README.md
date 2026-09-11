@@ -78,7 +78,10 @@ drives both over ssh to its own host with a key that can only run
 ## Forgejo
 
 A pull mirror of every GitHub repo the account owns, forks excluded, on
-the NAS disk under `forgejo/` next to the share. Forgejo runs as a podman
+the NAS disk under `forgejo/` next to the share. Every mirror is public,
+private GitHub repos included, since only the tailnet can reach it, so
+browsing and cloning need no login. It is browse-only, issues, pull
+requests, wikis, packages and actions are all off. Forgejo runs as a podman
 quadlet, HTTPS only, and `forgejo-mirror` adds any repo GitHub has that
 Forgejo does not, daily from cron and from `make forgejo-mirror`. Forgejo
 resyncs each mirror every 8 hours. Mirrors are read-only, keep pushing to

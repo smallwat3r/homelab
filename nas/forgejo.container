@@ -14,12 +14,27 @@ Volume=@DIR@:/data
 PublishPort=127.0.0.1:@PORT@:3000
 Environment=FORGEJO__server__DOMAIN=nas.@DOMAIN@
 Environment=FORGEJO__server__ROOT_URL=https://nas.@DOMAIN@/git/
+# every mirror is public, so nobody needs to log in, land on the repo list
+Environment=FORGEJO__server__LANDING_PAGE=explore
 # HTTPS only, mirrors are read-only anyway. To push over ssh add
 # SSH_PORT=2222, PublishPort=2222:22 and drop this line
 Environment=FORGEJO__server__DISABLE_SSH=true
 Environment=FORGEJO__database__DB_TYPE=sqlite3
 Environment=FORGEJO__security__INSTALL_LOCK=true
 Environment=FORGEJO__service__DISABLE_REGISTRATION=true
+# browse-only: code and tags, nothing else, and no calls out to the internet
+Environment=FORGEJO__repository__DISABLED_REPO_UNITS=repo.issues,repo.ext_issues,repo.pulls,repo.wiki,repo.ext_wiki,repo.projects,repo.packages,repo.actions
+Environment=FORGEJO__repository__DEFAULT_REPO_UNITS=repo.code,repo.releases
+Environment=FORGEJO__repository__DISABLE_STARS=true
+Environment=FORGEJO__packages__ENABLED=false
+Environment=FORGEJO__actions__ENABLED=false
+Environment=FORGEJO__oauth2__ENABLED=false
+Environment=FORGEJO__server__OFFLINE_MODE=true
+Environment=FORGEJO__picture__DISABLE_GRAVATAR=true
+Environment=FORGEJO__picture__ENABLE_FEDERATED_AVATAR=false
+Environment=FORGEJO__service_0X2E_explore__DISABLE_USERS_PAGE=true
+Environment=FORGEJO__service_0X2E_explore__DISABLE_ORGANIZATIONS_PAGE=true
+Environment=FORGEJO__service_0X2E_explore__DISABLE_CODE_PAGE=true
 
 [Service]
 Restart=always

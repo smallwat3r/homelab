@@ -18,7 +18,7 @@ OWNER = "@USER@"
 GH_TOKEN = Path("@GH_CREDENTIALS@")
 FORGEJO_TOKEN = Path("@FORGEJO_TOKEN@")
 
-# A repo as either API returns it, only name, fork, clone_url, private and
+# A repo as either API returns it, only name, fork, clone_url and
 # description are read
 Repo = dict[str, Any]
 
@@ -53,9 +53,9 @@ def migrate(repo: Repo, gh_token: str, fj_token: str) -> None:
         "repo_owner": OWNER,
         "repo_name": repo["name"],
         "description": repo["description"] or "",
-        "private": repo["private"],
+        # public even for private GitHub repos, only the tailnet can reach it
+        "private": False,
         "mirror": True,
-        "wiki": True,
     })
 
 
