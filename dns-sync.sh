@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # shellcheck source=config
-source "$(dirname "${BASH_SOURCE[0]}")/../config"
+source "$(dirname "${BASH_SOURCE[0]}")/config"
 readonly ZONE="${DOMAIN#*.}"
 readonly HOSTS=(ha nas gardener)
 readonly API="https://api.cloudflare.com/client/v4"

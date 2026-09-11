@@ -2,7 +2,7 @@
 
 Config and provisioning for the Raspberry Pis at home. One directory per
 host with an idempotent `setup.sh`, `lib.sh` for shared helpers, `config`
-for shared facts (domain, LAN IPs, ports, paths), `dns/sync.sh` behind
+for shared facts (domain, LAN IPs, ports, paths), `dns-sync.sh` behind
 `make dns` and `taildrop.service` installed on ha and nas. `make help`
 lists the targets.
 

@@ -42,10 +42,10 @@ install_deps() {
 setup_subnet_router() {
   install_tailscale
   log "subnet router"
-  sudo install -m 0644 "${HOST_DIR}/tailscale/99-tailscale.conf" /etc/sysctl.d/
+  sudo install -m 0644 "${HOST_DIR}/99-tailscale.conf" /etc/sysctl.d/
   sudo sysctl -q --system
-  sudo install -m 0644 "${HOST_DIR}/tailscale/tailscale-gro.service" /etc/systemd/system/
-  sudo install -D -m 0644 "${HOST_DIR}/tailscale/tailscaled-after-docker.conf" \
+  sudo install -m 0644 "${HOST_DIR}/tailscale-gro.service" /etc/systemd/system/
+  sudo install -D -m 0644 "${HOST_DIR}/tailscaled-after-docker.conf" \
     /etc/systemd/system/tailscaled.service.d/after-docker.conf
   sudo systemctl daemon-reload
   sudo systemctl enable --now tailscale-gro.service
@@ -67,7 +67,7 @@ setup_ivpn_exit() {
   fi
   echo "net.ipv4.conf.all.rp_filter = 2" | sudo tee /etc/sysctl.d/99-ivpn.conf >/dev/null
   sudo sysctl -q --system
-  sed "s|@LAN_SUBNET@|${LAN_SUBNET}|g" "${HOST_DIR}/tailscale/wg-quick-ivpn.conf" \
+  sed "s|@LAN_SUBNET@|${LAN_SUBNET}|g" "${HOST_DIR}/wg-quick-ivpn.conf" \
     | sudo install -D -m 0644 /dev/stdin /etc/systemd/system/wg-quick@ivpn.service.d/routing.conf
   sudo systemctl daemon-reload
   sudo systemctl enable wg-quick@ivpn.service

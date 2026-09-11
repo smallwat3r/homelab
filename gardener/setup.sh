@@ -31,7 +31,9 @@ install_app_certificate() {
 main() {
   install_tailscale
   install_app_certificate
-  # python3-docker adds container stats to what glances exposes
+  # python3-docker adds container stats to what glances exposes, the drop-in
+  # lets the unit reach the docker socket
+  sudo install -D -m 0644 "${HOST_DIR}/glances-docker.conf" /etc/systemd/system/glances.service.d/docker.conf
   install_glances "${GARDENER_IP}" python3-docker
   log "done, https://gardener.${DOMAIN}, add the Glances integration in HA with host ${GARDENER_IP}"
 }
