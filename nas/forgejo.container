@@ -16,9 +16,12 @@ Environment=FORGEJO__server__DOMAIN=nas.@DOMAIN@
 Environment=FORGEJO__server__ROOT_URL=https://nas.@DOMAIN@/git/
 # every mirror is public, so nobody needs to log in, land on the repo list
 Environment=FORGEJO__server__LANDING_PAGE=explore
-# HTTPS only, mirrors are read-only anyway. To push over ssh add
+# HTTPS only, pushes use a token over HTTPS. To push over ssh add
 # SSH_PORT=2222, PublishPort=2222:22 and drop this line
 Environment=FORGEJO__server__DISABLE_SSH=true
+# git push to a repo that does not exist yet creates it, private, so the
+# notes repo needs no click in the UI
+Environment=FORGEJO__repository__ENABLE_PUSH_CREATE_USER=true
 Environment=FORGEJO__database__DB_TYPE=sqlite3
 Environment=FORGEJO__security__INSTALL_LOCK=true
 Environment=FORGEJO__service__DISABLE_REGISTRATION=true

@@ -7,7 +7,7 @@ HOST_gardener = pi@gardener.$(DOMAIN)
 PROVISION = provision-ha provision-nas provision-gardener
 GARDENER_SRC ?= $(HOME)/code/rpi-gardener
 
-.PHONY: help lint dns push provision $(PROVISION) ivpn-conf deploy-gardener github-token forgejo-mirror ha-sync ha-check ha-restart ha-update ha-logs status
+.PHONY: help lint dns push provision $(PROVISION) ivpn-conf deploy-gardener github-token forgejo-token forgejo-mirror ha-sync ha-check ha-restart ha-update ha-logs status
 
 help:  ## Show this help menu
 	@grep -hE '^[a-zA-Z_%-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -32,6 +32,11 @@ github-token:  ## Put the GitHub token from pass on nas for Forgejo's mirrors, o
 	pass show $(GH_PASS_ENTRY) | head -1 | tr -d '\r' \
 	  | ssh $(HOST_nas) 'sudo install -d -m 0700 $(dir $(GH_CREDENTIALS)) \
 	    && sudo sh -c "umask 077 && cat > $(GH_CREDENTIALS)"'
+
+forgejo-token:  ## Mint a Forgejo push token on nas into pass for this machine's notes repo, once
+	ssh $(HOST_nas) "sudo podman exec -u git forgejo forgejo admin user generate-access-token --raw \
+	    --username $(FORGEJO_USER) --token-name notes-$$(hostname) --scopes write:repository" \
+	  | { cat; echo "username: $(FORGEJO_USER)"; } | pass insert -m -f git/nas.$(DOMAIN)
 
 forgejo-mirror:  ## Add mirrors for GitHub repos Forgejo does not have yet (also runs daily on nas)
 	ssh $(HOST_nas) 'sudo forgejo-mirror'

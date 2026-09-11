@@ -92,6 +92,22 @@ The first provision prints the owner's random password, the web UI asks to
 change it on first login. Registration is off, add users from Site
 administration.
 
+### Notes
+
+`~/notes` on a laptop is a private repo on Forgejo, pushed over HTTPS with
+a token. Emacs keeps org, journal and deft under it, anything else (md,
+txt, whatever) goes alongside. `make forgejo-token` mints a token on nas
+and stores it in pass as `git/nas.ts.smallwat3r.com`, where the dotfiles'
+`git-credential-pass` helper finds it. Pushing creates the repo, so the
+first push from a fresh laptop is:
+
+    git -C ~/notes remote add origin https://nas.ts.smallwat3r.com/git/smallwat3r/notes.git
+    git -C ~/notes push -u origin main
+
+after that the `notes-sync` user timer from the dotfiles commits and pushes
+every 15 minutes. The mirror job leaves it alone, it only adds repos GitHub
+has that Forgejo does not.
+
 ## Home Assistant
 
 Runtime state stays on the Pi under /opt/homeassistant. Repo-managed:
