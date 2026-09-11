@@ -13,8 +13,11 @@ help:  ## Show this help menu
 	@grep -hE '^[a-zA-Z_%-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "%-18s %s\n", $$1, $$2}'
 
-lint:  ## Shellcheck every script
-	shellcheck -x -s bash -P SCRIPTDIR lib.sh dns-sync.sh */setup.sh gardener/gardener-cert.sh
+lint:  ## Shellcheck every script, ruff and mypy the Python ones
+	shellcheck -x -s bash -P SCRIPTDIR lib.sh dns-sync.sh */setup.sh
+	shellcheck -s sh ha/ivpn-ctl gardener/gardener-cert.sh
+	ruff check nas
+	mypy --strict nas
 
 provision:  ## Provision every host in parallel (or provision-ha|nas|gardener), a down host doesn't block the rest
 	$(MAKE) -j$(words $(HOSTS)) -k -O $(PROVISION)
