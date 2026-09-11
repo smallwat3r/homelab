@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Upsert A records <host>.ts.smallwat3r.com -> tailnet IP in Cloudflare for
-# the hosts below, taking the IPs from the local tailscale client.
+# the hosts given as arguments, taking the IPs from the local tailscale
+# client. make dns passes every host directory.
 # Token: a Cloudflare API token with Zone:DNS:Edit on smallwat3r.com, read
 # from $CF_API_TOKEN or pass, entry named by CF_PASS_ENTRY in config.
 # DRY_RUN=1 prints the changes without applying them.
@@ -10,9 +11,13 @@ set -euo pipefail
 # shellcheck source=config
 source "$(dirname "${BASH_SOURCE[0]}")/config"
 readonly ZONE="${DOMAIN#*.}"
-readonly HOSTS=(ha nas gardener)
+readonly HOSTS=("$@")
 readonly API="https://api.cloudflare.com/client/v4"
 
+if [[ ${#HOSTS[@]} -eq 0 ]]; then
+  echo "usage: dns-sync.sh HOST..." >&2
+  exit 1
+fi
 token="${CF_API_TOKEN:-$(pass show "${CF_PASS_ENTRY}" 2>/dev/null || true)}"
 if [[ -z "${token}" ]]; then
   echo "no Cloudflare token, set CF_API_TOKEN or 'pass insert ${CF_PASS_ENTRY}'" >&2

@@ -23,7 +23,7 @@ provision:  ## Provision every host in parallel (or provision-ha|nas|gardener), 
 	$(MAKE) -j$(words $(HOSTS)) -k -O $(PROVISION)
 
 dns:  ## Point <host>.ts.smallwat3r.com at each tailnet IP, DRY_RUN=1 to preview
-	DRY_RUN=$(DRY_RUN) ./dns-sync.sh
+	DRY_RUN=$(DRY_RUN) ./dns-sync.sh $(HOSTS)
 
 cert-token-%:  ## Put the Cloudflare token from pass on a host for certbot, once (cert-token-ha|nas|gardener)
 	pass show $(CF_PASS_ENTRY) | head -1 | tr -d '\r' \
