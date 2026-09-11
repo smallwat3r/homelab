@@ -27,8 +27,9 @@ keeps them in sync, Tailscale's split DNS sends the domain to Cloudflare's
 resolvers.
 
 - https://ha.ts.smallwat3r.com, Home Assistant
-- https://nas.ts.smallwat3r.com, OpenMediaVault, `/files` is File Browser
-  over the `stuff` share, `/git` is Forgejo
+- https://nas.ts.smallwat3r.com, OpenMediaVault
+- https://nas.ts.smallwat3r.com/files, File Browser over the `stuff` share
+- https://nas.ts.smallwat3r.com/git, Forgejo
 - https://gardener.ts.smallwat3r.com, rpi-gardener, deploy it with
   `make deploy-gardener` before `make provision-gardener`, which puts the
   certificate into its nginx
