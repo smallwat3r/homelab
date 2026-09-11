@@ -37,7 +37,7 @@ stuff_share_path() {
 install_filebrowser() {
   log "file browser"
   if ! dpkg -s openmediavault-filebrowser >/dev/null 2>&1; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openmediavault-filebrowser
+    apt_install openmediavault-filebrowser
   fi
   sudo omv-rpc -u admin FileBrowser set \
     "{\"enable\":true,\"port\":${FILEBROWSER_PORT},\"sslcertificateref\":\"\",\"sharedfolderref\":\"$(stuff_share_uuid)\"}" >/dev/null
