@@ -27,7 +27,7 @@ def main() -> None:
     # OMV's marker uuid for "create a new object" in set calls
     match = re.search(
         r'^OMV_CONFIGOBJECT_NEW_UUID="([^"]+)"',
-        Path("/etc/default/openmediavault").read_text(), re.M,
+        Path("/etc/default/openmediavault").read_text(), re.MULTILINE,
     )
     assert match, "OMV_CONFIGOBJECT_NEW_UUID missing from /etc/default/openmediavault"
     new_uuid = match.group(1)
