@@ -181,10 +181,12 @@ verify_forwarding() {
 main() {
   require_pi_user
   install_deps
+  keep_journal_in_ram
   setup_subnet_router
   setup_ivpn_exit
   install_taildrop "${HOME}/taildrop"
   install_docker
+  docker_logs_to_journal
   mount_nas_share
   # the hook restarts HA so it serves the renewed files
   install_certificate "docker restart homeassistant 2>/dev/null || true"

@@ -30,6 +30,7 @@ install_app_certificate() {
 
 main() {
   install_tailscale
+  keep_journal_in_ram
   install_app_certificate
   # python3-docker adds container stats to what glances exposes, the drop-in
   # lets the unit reach the docker socket

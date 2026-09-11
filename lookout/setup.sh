@@ -13,16 +13,6 @@ readonly HOST_DIR
 
 source "${HOST_DIR}/../lib.sh"
 
-# Spare the SD card: the journal stays in RAM, Slack is the durable log of
-# what matters here, and swap is already zram. nginx's access log is off
-# in nginx.conf, the open page reloads itself every minute.
-spare_sd_card() {
-  log "sd card"
-  printf '[Journal]\nStorage=volatile\nRuntimeMaxUse=32M\n' \
-    | sudo install -D -m 0644 /dev/stdin /etc/systemd/journald.conf.d/volatile.conf
-  sudo systemctl restart systemd-journald
-}
-
 install_watchdog() {
   log "watchdog"
   if ! sudo test -f "${SLACK_CONF}"; then
@@ -58,7 +48,7 @@ install_page() {
 
 main() {
   advertise_lan_subnet
-  spare_sd_card
+  keep_journal_in_ram
   # the hook only runs on issuance, which can happen before nginx is installed
   install_certificate "systemctl reload nginx 2>/dev/null || true"
   install_watchdog

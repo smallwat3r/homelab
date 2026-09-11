@@ -56,6 +56,31 @@ advertise_lan_subnet() {
   sudo tailscale set --advertise-routes="${LAN_SUBNET}"
 }
 
+# Spare the SD card: the journal stays in RAM, under /run, where journald
+# caps it at 15% of that tmpfs by default, so it scales with the box's
+# memory (about 12MB on the 512MB lookout) and drops old entries rather
+# than grow. nas is left alone, OMV keeps /var/log and its databases in
+# its own RAM write cache.
+keep_journal_in_ram() {
+  log "journal in ram"
+  printf '[Journal]\nStorage=volatile\n' \
+    | sudo install -D -m 0644 /dev/stdin /etc/systemd/journald.conf.d/volatile.conf
+  sudo systemctl restart systemd-journald
+}
+
+# Container logs go to the journal, so in RAM and capped, instead of ever
+# growing json files on the card. docker logs still works. Only containers
+# created after this pick it up, make ha-sync recreates HA's. gardener
+# does not need it, rpi-gardener's compose file caps its own logs.
+docker_logs_to_journal() {
+  log "docker logs to journal"
+  local conf='{"log-driver": "journald"}'
+  if [[ "$(sudo cat /etc/docker/daemon.json 2>/dev/null)" != "${conf}" ]]; then
+    echo "${conf}" | sudo install -D -m 0644 /dev/stdin /etc/docker/daemon.json
+    sudo systemctl restart docker
+  fi
+}
+
 # Receive Taildrop files into the given directory, created if missing and
 # owned by this user, who the unit runs as. Any device on the tailnet can
 # then send with `tailscale file cp <file> <host>:` or the share sheet.

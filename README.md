@@ -99,6 +99,19 @@ state and time of the last change. Nothing watches lookout itself. To
 spare the SD card its journal lives in RAM, Slack is the durable log, and
 nginx keeps no access log.
 
+## SD cards
+
+Every Pi boots from an SD card, so nothing that writes constantly may live
+on it. Swap is zram everywhere. ha, gardener and lookout keep the journal
+in RAM, and docker on ha logs to the journal instead of json files,
+`make ha-sync` recreates the container so it picks that up, gardener's
+compose file caps its own. nas needs none of it, OpenMediaVault keeps /var/log
+and its databases in a RAM write cache and Forgejo's data is on the disk.
+Home Assistant's recorder is the one real writer left, it commits every
+five minutes and keeps three days, and its ssh polling of the IVPN switch
+is slowed down since every poll is a logged login. lookout's nginx keeps
+no access log.
+
 ## Forgejo
 
 A pull mirror of every GitHub repo the account owns, forks excluded, on
