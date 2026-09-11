@@ -53,15 +53,16 @@ install_tailscale() {
   sudo tailscale set --operator="${USER}" --ssh --accept-risk=lose-ssh
 }
 
-# Advertise the LAN subnet to the tailnet. Several hosts doing so is how
-# Tailscale fails over between them, the route has to be approved for each
-# in the admin console.
+# Advertise the LAN subnet to the tailnet, extra tailscale set flags can
+# follow. The route has to be approved per host in the admin console.
+# shellcheck disable=SC2120
 advertise_lan_subnet() {
   install_tailscale
   log "subnet router"
   sudo install -m 0644 "${HOST_DIR}/../99-tailscale.conf" /etc/sysctl.d/
   sudo sysctl -q --system
-  sudo tailscale set --advertise-routes="${LAN_SUBNET}"
+  # one call, --advertise-exit-node on its own replaces the routes
+  sudo tailscale set --advertise-routes="${LAN_SUBNET}" "$@"
 }
 
 # Spare the SD card: the journal stays in RAM, under /run, where journald
