@@ -1,10 +1,10 @@
 # Manage the Pis from this machine over the tailnet. One directory per host.
 include config
 REMOTE_DIR ?= /home/pi/homelab
-HOST_ha = pi@ha.$(DOMAIN)
-HOST_nas = pi@nas.$(DOMAIN)
-HOST_gardener = pi@gardener.$(DOMAIN)
-PROVISION = provision-ha provision-nas provision-gardener
+# A host is a directory with a setup.sh, each gets HOST_<name> and provision-<name>
+HOSTS = $(patsubst %/setup.sh,%,$(wildcard */setup.sh))
+$(foreach h,$(HOSTS),$(eval HOST_$(h) = pi@$(h).$(DOMAIN)))
+PROVISION = $(addprefix provision-,$(HOSTS))
 GARDENER_SRC ?= $(HOME)/code/rpi-gardener
 
 .PHONY: help lint dns push provision $(PROVISION) ivpn-conf deploy-gardener github-token forgejo-token forgejo-mirror ha-sync ha-check ha-restart ha-update ha-logs status
@@ -17,7 +17,7 @@ lint:  ## Shellcheck every script
 	shellcheck -x -s bash -P SCRIPTDIR lib.sh dns-sync.sh */setup.sh gardener/gardener-cert.sh
 
 provision:  ## Provision every host in parallel (or provision-ha|nas|gardener), a down host doesn't block the rest
-	$(MAKE) -j3 -k -O $(PROVISION)
+	$(MAKE) -j$(words $(HOSTS)) -k -O $(PROVISION)
 
 dns:  ## Point <host>.ts.smallwat3r.com at each tailnet IP, DRY_RUN=1 to preview
 	DRY_RUN=$(DRY_RUN) ./dns-sync.sh
@@ -98,6 +98,4 @@ STATUS_gardener = $(call units,glances certbot.timer); \
   curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo
 
 status:  ## Quick health check of all hosts
-	@echo "== ha"; ssh $(HOST_ha) '$(STATUS_ha)'
-	@echo "== nas"; ssh $(HOST_nas) '$(STATUS_nas)'
-	@echo "== gardener"; ssh $(HOST_gardener) '$(STATUS_gardener)'
+	@$(foreach h,$(HOSTS),echo "== $(h)"; ssh $(HOST_$(h)) '$(STATUS_$(h))';)
