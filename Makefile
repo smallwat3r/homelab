@@ -19,7 +19,7 @@ help:  ## Show this help menu
 
 lint:  ## Shellcheck every script, ruff and mypy the Python ones
 	shellcheck -x -s bash -P SCRIPTDIR lib.sh */setup.sh */status.sh
-	shellcheck -s sh ha/ivpn-ctl gardener/gardener-cert.sh
+	shellcheck -s sh gardener/gardener-cert.sh
 	ruff check
 	mypy --strict .
 

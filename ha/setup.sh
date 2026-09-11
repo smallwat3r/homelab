@@ -11,7 +11,7 @@ readonly HOST_DIR
 source "${HOST_DIR}/../lib.sh"
 
 # apt packages beyond what lib's shared installers bring, in one go
-readonly PACKAGES=(unzip ethtool wireguard-tools jq)
+readonly PACKAGES=(unzip ethtool wireguard-tools)
 readonly HACS_DIR="${HA_CONFIG_DIR}/custom_components/hacs"
 readonly HACS_ZIP_URL="https://github.com/hacs/integration/releases/latest/download/hacs.zip"
 readonly EERO_DIR="${HA_CONFIG_DIR}/custom_components/eero"
@@ -129,7 +129,7 @@ install_eero() {
 # which the container sees as /config, the ssh config comes from the repo.
 install_ivpn_switch() {
   log "ivpn switch"
-  sudo install -m 0755 "${HOST_DIR}/ivpn-ctl" /usr/local/bin/
+  sudo install -m 0755 "${HOST_DIR}/ivpn-ctl.py" /usr/local/bin/ivpn-ctl
   local ssh_dir="${HA_CONFIG_DIR}/.ssh"
   [[ -f "${ssh_dir}/ivpn" ]] || ssh-keygen -q -t ed25519 -N "" -C "homeassistant ivpn switch" -f "${ssh_dir}/ivpn"
   echo "127.0.0.1 $(cut -d' ' -f1,2 /etc/ssh/ssh_host_ed25519_key.pub)" > "${ssh_dir}/known_hosts"
