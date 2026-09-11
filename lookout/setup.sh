@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Provision lookout, the Raspberry Pi 3A+ that advertises the LAN subnet as
-# a second Tailscale subnet router, so the tailnet fails over to it while ha
-# is down, and runs a watchdog that posts to Slack when a host or one of
-# nas's services stops answering, with a status page served by nginx.
+# Provision lookout, the Raspberry Pi 3A+ that stands in for ha as subnet
+# router while ha is down, and runs a watchdog that posts to Slack when a
+# host or one of nas's services stops answering, with a status page served
+# by nginx. The watchdog holds and releases the LAN route, see watchdog.py.
 # Wi-Fi only and 512MB, nothing else runs here.
 # Idempotent. Run as a sudoer, from any directory: ./lookout/setup.sh
 
@@ -19,7 +19,7 @@ install_watchdog() {
     echo "missing ${SLACK_CONF}, run 'make slack-webhook' first" >&2
     exit 1
   fi
-  sed "s/@DOMAIN@/${DOMAIN}/g" "${HOST_DIR}/watchdog.py" \
+  sed "s/@DOMAIN@/${DOMAIN}/g; s|@LAN_SUBNET@|${LAN_SUBNET}|g" "${HOST_DIR}/watchdog.py" \
     | sudo install -m 0755 /dev/stdin /usr/local/bin/watchdog
   sudo install -m 0644 "${HOST_DIR}/watchdog.service" "${HOST_DIR}/watchdog.timer" /etc/systemd/system/
   sudo systemctl daemon-reload
@@ -32,7 +32,7 @@ install_watchdog() {
 # ocrab font, served from the same directory
 install_page() {
   log "page"
-  sudo install -m 0644 -o www-data -g www-data "${HOST_DIR}/../ocrab.woff2" /var/lib/watchdog/
+  sudo install -m 0644 "${HOST_DIR}/../ocrab.woff2" /var/lib/watchdog/
   if ! command -v nginx >/dev/null; then
     apt_install nginx-light
   fi
@@ -47,13 +47,15 @@ install_page() {
 }
 
 main() {
+  # advertised here so the route shows up for approval, the watchdog
+  # releases it on its first run while ha is up
   advertise_lan_subnet
   keep_journal_in_ram
   # the hook only runs on issuance, which can happen before nginx is installed
   install_certificate "systemctl reload nginx 2>/dev/null || true"
   install_watchdog
   install_page
-  log "done, https://lookout.${DOMAIN}, approve lookout's subnet route in the Tailscale admin console"
+  log "done, https://lookout.${DOMAIN}, approve lookout's subnet route in the Tailscale admin console if not yet"
 }
 
 main "$@"

@@ -11,7 +11,7 @@ lists the targets.
 | ha        | Tailscale subnet router and exit node through IVPN, Home Assistant Container, TLS certificate |
 | nas       | OpenMediaVault, File Browser, Forgejo mirroring GitHub |
 | gardener  | rpi-gardener containers, TLS certificate for its nginx |
-| lookout   | Second subnet router the tailnet fails over to, watchdog alerting on Slack with a status page |
+| lookout   | Standby subnet router while ha is down, watchdog alerting on Slack with a status page |
 
 Every target reaches a host as `pi@<host>.ts.smallwat3r.com`, so a fresh
 Pi needs Tailscale installed and joined to the tailnet, then `make dns`,
@@ -83,10 +83,12 @@ drives both over ssh to its own host with a key that can only run
 
 ## Lookout
 
-The Pi 3A+ advertises the LAN subnet like ha does, without the exit node,
-so subnet routing keeps working while ha reboots or is broken. Approve its
-route in the Tailscale admin console, Tailscale then picks one router and
-fails over on its own.
+The Pi 3A+ stands in for ha as subnet router, without the exit node, so
+the LAN stays reachable while ha reboots or is broken. Tailscale picks any
+approved router as primary and never fails back, so lookout only
+advertises the subnet while the watchdog sees ha down, and withdraws it
+when ha answers again. Approve its route once in the Tailscale admin
+console, provisioning advertises it so it shows up there.
 
 Every two minutes it fetches ha, nas, File Browser and Forgejo on nas, and
 gardener over the tailnet, and posts to Slack when one goes down or comes

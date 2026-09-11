@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Check each service over the tailnet, post to Slack when one changes state
-and render index.html for nginx. Runs from watchdog.timer, SLACK_WEBHOOK
-comes from make slack-webhook and STATE_DIRECTORY from the unit, setup.sh
-fills in @DOMAIN@. A service's state file is written only once Slack
-accepted the message, so a failed post is retried next run rather than
-lost."""
+"""Check each service over the tailnet, post to Slack when one changes
+state, render index.html for nginx, and hold the LAN route while ha is
+down. Runs from watchdog.timer as root, SLACK_WEBHOOK comes from make
+slack-webhook and STATE_DIRECTORY from the unit, setup.sh fills in
+@DOMAIN@ and @LAN_SUBNET@. A service's state file is written only once
+Slack accepted the message, so a failed post is retried next run rather
+than lost."""
 
 import html
 import json
 import os
+import subprocess
 import sys
 import time
 import urllib.request
@@ -17,6 +19,7 @@ from pathlib import Path
 from string import Template
 
 DOMAIN = "@DOMAIN@"
+LAN_SUBNET = "@LAN_SUBNET@"
 # Name, URL and the host it runs on if that is checked separately. The name
 # is the state file and what Slack and the page show. A service on a down
 # host is down without a fetch or a message of its own.
@@ -107,6 +110,25 @@ def row(name: str, url: str, state: str) -> str:
             f'<td class="{state}">{state}<td>{since}')
 
 
+def hold_route(hold: bool) -> None:
+    """Advertise the LAN subnet only while ha is down. Tailscale picks any
+    approved router as primary and never fails back, so lookout stays out
+    of the running until needed and hands the route back when ha returns.
+    The state file remembers what was last set, so tailscale's prefs on
+    the card are only rewritten on a change. No file, as after
+    provisioning, means unknown and the route is set either way."""
+    state_file = STATE / "route"
+    want = "on" if hold else "off"
+    if state_file.exists() and state_file.read_text() == want:
+        return
+    routes = LAN_SUBNET if hold else ""
+    if subprocess.run(["tailscale", "set", f"--advertise-routes={routes}"], check=False).returncode:
+        print("tailscale set failed, retrying next run", file=sys.stderr)
+        return
+    print("holding the LAN route, ha is down" if hold else "released the LAN route to ha", flush=True)
+    state_file.write_text(want)
+
+
 def main() -> None:
     states: dict[str, str] = {}
     rows = []
@@ -122,6 +144,7 @@ def main() -> None:
     tmp = STATE / ".index.html"
     tmp.write_text(PAGE.substitute(rows="\n".join(rows), checked=stamp()))
     tmp.replace(STATE / "index.html")
+    hold_route(states["ha"] == "down")
     # a failed post fails the unit, so it shows in systemctl until it lands
     sys.exit(owed)
 

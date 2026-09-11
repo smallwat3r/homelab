@@ -9,5 +9,6 @@ source "${HOST_DIR}/../lib.sh"
 
 tailscale status --self | head -1
 units watchdog.timer nginx certbot.timer
+grep -qx on /var/lib/watchdog/route 2>/dev/null && echo "holding the LAN route, ha is down" || echo "LAN route with ha"
 # the page as text, one line per service and the checked time
 curl -sf -m 5 "https://lookout.${DOMAIN}/" | grep -E '^<tr><td|^<p>' | sed 's/<[^>]*>/ /g'
