@@ -18,7 +18,7 @@ help:  ## Show this help menu
 		awk 'BEGIN {FS = ":.*?## "}; {printf "%-18s %s\n", $$1, $$2}'
 
 lint:  ## Shellcheck every script, ruff and mypy the Python ones
-	shellcheck -x -s bash -P SCRIPTDIR lib.sh dns-sync.sh */setup.sh */status.sh
+	shellcheck -x -s bash -P SCRIPTDIR lib.sh */setup.sh */status.sh
 	shellcheck -s sh ha/ivpn-ctl gardener/gardener-cert.sh
 	ruff check
 	mypy --strict .
@@ -27,7 +27,7 @@ provision:  ## Provision every host in parallel (or provision-<host>), a down ho
 	$(MAKE) -j$(words $(HOSTS)) -k -O $(PROVISION)
 
 dns:  ## Point <host>.ts.smallwat3r.com at each tailnet IP, DRY_RUN=1 to preview
-	DRY_RUN=$(DRY_RUN) ./dns-sync.sh $(HOSTS)
+	DRY_RUN=$(DRY_RUN) ./dns-sync.py $(HOSTS)
 
 cert-token-%:  ## Put the Cloudflare token from pass on a host for certbot, once (cert-token-<host>)
 	$(call entry,$(CF_PASS_ENTRY)) | $(call secret,$(HOST_$*),$(CF_CREDENTIALS),dns_cloudflare_api_token = )
