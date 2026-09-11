@@ -10,7 +10,6 @@ readonly HOST_DIR
 
 source "${HOST_DIR}/../lib.sh"
 
-readonly LAN_SUBNET="192.168.4.0/24"
 # apt packages beyond what lib's shared installers bring, in one go
 readonly PACKAGES=(unzip ethtool wireguard-tools jq)
 readonly HACS_DIR="${HA_CONFIG_DIR}/custom_components/hacs"
@@ -27,29 +26,19 @@ require_pi_user() {
 
 install_deps() {
   log "deps"
-  local missing=()
-  local pkg
-  for pkg in "${PACKAGES[@]}"; do
-    dpkg -s "${pkg}" >/dev/null 2>&1 || missing+=("${pkg}")
-  done
-  if [[ ${#missing[@]} -gt 0 ]]; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "${missing[@]}"
-  fi
+  apt_install "${PACKAGES[@]}"
 }
 
-# On top of lib's install: forwarding sysctls, GRO tuning, and advertising
-# the LAN subnet and exit node
+# On top of lib's subnet router: GRO tuning, tailscaled after docker, and
+# the exit node
 setup_subnet_router() {
-  install_tailscale
-  log "subnet router"
-  sudo install -m 0644 "${HOST_DIR}/99-tailscale.conf" /etc/sysctl.d/
-  sudo sysctl -q --system
+  advertise_lan_subnet
   sudo install -m 0644 "${HOST_DIR}/tailscale-gro.service" /etc/systemd/system/
   sudo install -D -m 0644 "${HOST_DIR}/tailscaled-after-docker.conf" \
     /etc/systemd/system/tailscaled.service.d/after-docker.conf
   sudo systemctl daemon-reload
   sudo systemctl enable --now tailscale-gro.service
-  sudo tailscale set --advertise-routes="${LAN_SUBNET}" --advertise-exit-node
+  sudo tailscale set --advertise-exit-node
 }
 
 # Devices that pick ha as exit node go out through an IVPN WireGuard

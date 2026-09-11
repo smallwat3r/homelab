@@ -44,8 +44,7 @@ install_filebrowser() {
   sudo omv-rpc -u admin Config applyChanges '{"modules":["filebrowser"],"force":false}' >/dev/null
 
   log "verify file browser"
-  retry 10 curl -sf -m 3 -o /dev/null "http://127.0.0.1:${FILEBROWSER_PORT}/" \
-    || { echo "file browser not answering on port ${FILEBROWSER_PORT}" >&2; return 1; }
+  verify_http "http://127.0.0.1:${FILEBROWSER_PORT}/" "file browser not answering on port ${FILEBROWSER_PORT}"
 }
 
 # Put File Browser behind OMV's nginx at /files, the bare port is still
@@ -80,8 +79,7 @@ install_forgejo() {
   sudo systemctl restart forgejo.service
 
   log "verify forgejo"
-  retry 30 curl -sf -m 3 -o /dev/null "http://127.0.0.1:${FORGEJO_PORT}/api/v1/version" \
-    || { echo "forgejo not answering on port ${FORGEJO_PORT}" >&2; return 1; }
+  verify_http "http://127.0.0.1:${FORGEJO_PORT}/api/v1/version" "forgejo not answering on port ${FORGEJO_PORT}" 30
   if ! sudo podman exec -u git forgejo forgejo admin user list | grep -qw "${FORGEJO_USER}"; then
     log "forgejo user ${FORGEJO_USER}, change the password below on first login"
     sudo podman exec -u git forgejo forgejo admin user create --admin --random-password \
@@ -105,8 +103,7 @@ install_forgejo_path() {
   sudo systemctl reload nginx
 
   log "verify forgejo /git"
-  retry 10 curl -sf -m 3 -o /dev/null "http://127.0.0.1/git/api/v1/version" \
-    || { echo "forgejo not answering on /git" >&2; return 1; }
+  verify_http "http://127.0.0.1/git/api/v1/version" "forgejo not answering on /git"
 }
 
 # Mirror every GitHub repo into Forgejo, daily from cron for new repos and

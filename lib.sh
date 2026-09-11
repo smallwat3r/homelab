@@ -5,6 +5,10 @@ source "$(dirname "${BASH_SOURCE[0]}")/config"
 
 log() { printf '==> %s\n' "$*"; }
 
+apt_install() {
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "$@"
+}
+
 # Run a command up to N times, two seconds apart, until it succeeds
 retry() {
   local n="$1" i
@@ -14,6 +18,12 @@ retry() {
     sleep 2
   done
   return 1
+}
+
+# Fail with the message unless the URL answers within the given tries
+verify_http() {
+  local url="$1" message="$2" tries="${3:-10}"
+  retry "${tries}" curl -sf -m 3 -o /dev/null "${url}" || { echo "${message}" >&2; return 1; }
 }
 
 # Every host joins the tailnet directly, even though ha's subnet routing
@@ -33,6 +43,17 @@ install_tailscale() {
   # tailnet policy's ssh rule decides who and as which user. Provisioning runs
   # over the tailnet, so accept the one-off disconnect the switch causes
   sudo tailscale set --operator="${USER}" --ssh --accept-risk=lose-ssh
+}
+
+# Advertise the LAN subnet to the tailnet. Several hosts doing so is how
+# Tailscale fails over between them, the route has to be approved for each
+# in the admin console.
+advertise_lan_subnet() {
+  install_tailscale
+  log "subnet router"
+  sudo install -m 0644 "${HOST_DIR}/../99-tailscale.conf" /etc/sysctl.d/
+  sudo sysctl -q --system
+  sudo tailscale set --advertise-routes="${LAN_SUBNET}"
 }
 
 # Receive Taildrop files into the given directory, created if missing and
@@ -64,8 +85,7 @@ install_certificate() {
     exit 1
   fi
   if ! command -v certbot >/dev/null; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
-      certbot python3-certbot-dns-cloudflare
+    apt_install certbot python3-certbot-dns-cloudflare
   fi
   sudo certbot certonly --non-interactive --agree-tos --register-unsafely-without-email \
     --keep-until-expiring --cert-name "${DOMAIN}" -d "*.${DOMAIN}" \
@@ -87,8 +107,7 @@ install_glances() {
   shift
   log "glances"
   if ! command -v glances >/dev/null; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
-      glances python3-fastapi python3-uvicorn python3-jinja2 "$@"
+    apt_install glances python3-fastapi python3-uvicorn python3-jinja2 "$@"
   fi
   # the unit reads BIND from here, keeping the address out of the unit file
   echo "BIND=${ip}" | sudo tee /etc/default/glances >/dev/null
@@ -100,6 +119,5 @@ install_glances() {
   sudo systemctl restart glances.service
 
   log "verify glances"
-  retry 10 curl -sf -m 3 -o /dev/null "http://${ip}:${GLANCES_PORT}/api/4/status" \
-    || { echo "glances api not answering on ${ip}:${GLANCES_PORT}" >&2; return 1; }
+  verify_http "http://${ip}:${GLANCES_PORT}/api/4/status" "glances api not answering on ${ip}:${GLANCES_PORT}"
 }
