@@ -18,7 +18,7 @@ help:  ## Show this help menu
 		awk 'BEGIN {FS = ":.*?## "}; {printf "%-18s %s\n", $$1, $$2}'
 
 lint:  ## Shellcheck every script, ruff and mypy the Python ones
-	shellcheck -x -s bash -P SCRIPTDIR lib.sh dns-sync.sh */setup.sh
+	shellcheck -x -s bash -P SCRIPTDIR lib.sh dns-sync.sh */setup.sh */status.sh
 	shellcheck -s sh ha/ivpn-ctl gardener/gardener-cert.sh
 	ruff check
 	mypy --strict .
@@ -87,22 +87,5 @@ ha-update:  ## Pull the latest Home Assistant image and recreate the container
 ha-logs:  ## Tail the Home Assistant container logs
 	ssh $(HOST_ha) 'docker logs -f --tail 100 homeassistant'
 
-# What each host runs for make status, one command per line. units prints
-# name and state per unit, handshake the age of the last IVPN handshake
-units = for u in $(1); do printf "%-16s %s\n" $$u $$(systemctl is-active $$u); done
-STATUS_ha = docker ps --format "table {{.Names}}\t{{.Status}}"; \
-  tailscale status --self | head -1; \
-  $(call units,taildrop wg-quick@ivpn certbot.timer); \
-  echo "ivpn handshake   $$(( $$(date +%s) - $$(sudo wg show ivpn latest-handshakes | cut -f2) ))s ago"; \
-  sudo iptables -S FORWARD | sed -n 2p; \
-  findmnt -t cifs -no SOURCE,FSTYPE /mnt/nas/stuff || echo "nas share not mounted"
-STATUS_nas = $(call units,glances pod-filebrowser forgejo taildrop certbot.timer); \
-  curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo
-STATUS_gardener = $(call units,glances certbot.timer); \
-  curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo
-STATUS_lookout = tailscale status --self | head -1; \
-  $(call units,watchdog.timer nginx certbot.timer); \
-  curl -sf -m 5 https://lookout.$(DOMAIN)/ | grep -E "^<tr><td|^<p>" | sed "s/<[^>]*>/ /g"
-
-status:  ## Quick health check of all hosts
-	@$(foreach h,$(HOSTS),echo "== $(h)"; ssh $(HOST_$(h)) '$(STATUS_$(h))';)
+status:  ## Quick health check of all hosts, each runs its status.sh from the last push
+	@$(foreach h,$(HOSTS),echo "== $(h)"; ssh $(HOST_$(h)) '$(REMOTE_DIR)/$(h)/status.sh';)

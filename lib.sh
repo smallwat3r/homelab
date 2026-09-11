@@ -5,6 +5,14 @@ source "$(dirname "${BASH_SOURCE[0]}")/config"
 
 log() { printf '==> %s\n' "$*"; }
 
+# Name and state of each unit, for the status scripts
+units() {
+  local u
+  for u in "$@"; do
+    printf '%-16s %s\n' "${u}" "$(systemctl is-active "${u}")"
+  done
+}
+
 apt_install() {
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "$@"
 }
