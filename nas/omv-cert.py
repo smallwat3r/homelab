@@ -21,10 +21,10 @@ def rpc(service: str, method: str, params: dict[str, Any]) -> Any:
         check=False, capture_output=True, text=True,
     )
     if proc.returncode:
-        # omv-rpc prints the engine's error as JSON on stdout, show the message
+        # omv-rpc prints the engine's error as JSON on stderr, show the message
         # rather than a bare CalledProcessError
         try:
-            detail = json.loads(proc.stdout)["error"]["message"]
+            detail = json.loads(proc.stderr)["error"]["message"]
         except (ValueError, KeyError, TypeError):
             detail = proc.stdout + proc.stderr
         raise SystemExit(f"omv-rpc {service}.{method} failed:\n{detail}")
