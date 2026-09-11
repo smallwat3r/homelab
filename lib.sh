@@ -28,8 +28,11 @@ install_tailscale() {
   if ! sudo tailscale status >/dev/null 2>&1; then
     sudo tailscale up
   fi
-  # lets this user run tailscale commands (file cp, file get) without sudo
-  sudo tailscale set --operator="${USER}"
+  # operator lets this user run tailscale commands (file cp, file get) without
+  # sudo, ssh lets any tailnet device log in with its Tailscale identity, the
+  # tailnet policy's ssh rule decides who and as which user. Provisioning runs
+  # over the tailnet, so accept the one-off disconnect the switch causes
+  sudo tailscale set --operator="${USER}" --ssh --accept-risk=lose-ssh
 }
 
 # Receive Taildrop files into the given directory, created if missing and
