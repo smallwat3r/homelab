@@ -130,6 +130,9 @@ install_omv_certificate() {
 }
 
 main() {
+  # a provision right after a reboot must not race OMV's services coming up,
+  # || true because a degraded state (any failed unit) still means booted
+  systemctl is-system-running --wait >/dev/null || true
   install_tailscale
   install_omv
   install_omv_certificate
