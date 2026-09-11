@@ -16,10 +16,19 @@ COMMENT = "letsencrypt *.@DOMAIN@"
 
 
 def rpc(service: str, method: str, params: dict[str, Any]) -> Any:
-    out = subprocess.run(
+    proc = subprocess.run(
         ["omv-rpc", "-u", "admin", service, method, json.dumps(params)],
-        check=True, capture_output=True, text=True,
-    ).stdout
+        check=False, capture_output=True, text=True,
+    )
+    if proc.returncode:
+        # omv-rpc prints the engine's error as JSON on stdout, show the message
+        # rather than a bare CalledProcessError
+        try:
+            detail = json.loads(proc.stdout)["error"]["message"]
+        except (ValueError, KeyError, TypeError):
+            detail = proc.stdout + proc.stderr
+        raise SystemExit(f"omv-rpc {service}.{method} failed:\n{detail}")
+    out = proc.stdout
     return json.loads(out) if out.strip() else None
 
 
