@@ -38,11 +38,11 @@ install_watchdog() {
   sudo systemctl start watchdog.service
 }
 
-# The page the watchdog renders, over HTTPS on the tailnet, in the ocrab
-# font Home Assistant's theme uses, served from the same directory
+# The page the watchdog renders, over HTTPS on the tailnet, in the shared
+# ocrab font, served from the same directory
 install_page() {
   log "page"
-  sudo install -m 0644 -o www-data -g www-data "${HOST_DIR}/../ha/homeassistant/www/fonts/ocrab.woff2" /var/lib/watchdog/
+  sudo install -m 0644 -o www-data -g www-data "${HOST_DIR}/../ocrab.woff2" /var/lib/watchdog/
   if ! command -v nginx >/dev/null; then
     apt_install nginx-light
   fi
