@@ -11,10 +11,11 @@ lists the targets.
 | ha        | Tailscale subnet router and exit node through IVPN, Home Assistant Container, TLS certificate |
 | nas       | OpenMediaVault, File Browser, Forgejo mirroring GitHub |
 | gardener  | rpi-gardener containers, TLS certificate for its nginx |
+| lookout   | Second subnet router the tailnet fails over to, watchdog alerting on Slack with a status page |
 
 Every target reaches a host as `pi@<host>.ts.smallwat3r.com`, so a fresh
 Pi needs Tailscale installed and joined to the tailnet, then `make dns`,
-before `make provision-<host>` works. `make provision` does all three.
+before `make provision-<host>` works. `make provision` does every host.
 
 ## Access
 
@@ -33,6 +34,7 @@ resolvers.
 - https://gardener.ts.smallwat3r.com, rpi-gardener, deploy it with
   `make deploy-gardener` before `make provision-gardener`, which puts the
   certificate into its nginx
+- https://lookout.ts.smallwat3r.com, the watchdog's status page
 
 File Browser's admin login starts as admin/admin, change it in Settings >
 User management right after provisioning, it has write access to the whole
@@ -40,12 +42,15 @@ share.
 
 ## Secrets
 
-Both live in pass and are copied to the host once, setup.sh never touches
+All live in pass and are copied to the host once, setup.sh never touches
 them.
 
 - `cloudflare/ts-dns`, the Cloudflare DNS token for certbot,
-  `make cert-token-ha`, `make cert-token-nas` and `make cert-token-gardener`
+  `make cert-token-ha`, `make cert-token-nas`, `make cert-token-gardener` and
+  `make cert-token-lookout`
 - `ivpn/wg-ha`, the IVPN WireGuard config, `make ivpn-conf`
+- `slack/homelab-webhook`, the Slack incoming webhook the watchdog posts to,
+  `make slack-webhook`
 - `github/forgejo-mirror`, a GitHub token that can read every repo (classic
   `repo` scope, or fine-grained with Contents and Metadata read on all
   repos), `make github-token`
@@ -75,6 +80,24 @@ down any other way blocks exit node traffic rather than leaking it.
 The Network dashboard has a switch for the tunnel and a server dropdown, HA
 drives both over ssh to its own host with a key that can only run
 `ivpn-ctl`.
+
+## Lookout
+
+The Pi 3A+ advertises the LAN subnet like ha does, without the exit node,
+so subnet routing keeps working while ha reboots or is broken. Approve its
+route in the Tailscale admin console, Tailscale then picks one router and
+fails over on its own.
+
+Every two minutes it fetches ha, nas, File Browser and Forgejo on nas, and
+gardener over the tailnet, and posts to Slack when one goes down or comes
+back. Create an app at
+api.slack.com with Incoming Webhooks on, add a webhook to a channel, store
+its URL in pass as `slack/homelab-webhook` and run `make slack-webhook`.
+The URL is the only thing guarding the channel. Each run also rewrites the
+status page nginx serves at https://lookout.ts.smallwat3r.com, service,
+state and time of the last change. Nothing watches lookout itself. To
+spare the SD card its journal lives in RAM, Slack is the durable log, and
+nginx keeps no access log.
 
 ## Forgejo
 

@@ -17,3 +17,5 @@ FORGEJO_TOKEN=/root/.secrets/forgejo-token
 GH_PASS_ENTRY=github/forgejo-mirror
 GH_CREDENTIALS=/root/.secrets/github-token
 LAN_SUBNET=192.168.4.0/24
+SLACK_PASS_ENTRY=slack/homelab-webhook
+SLACK_CONF=/etc/default/watchdog

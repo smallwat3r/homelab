@@ -1,0 +1,17 @@
+# Runs as nginx's user so the page it writes into the state directory is
+# readable by the server, a DynamicUser's directory sits under the
+# root-only /var/lib/private
+[Unit]
+Description=Check the other hosts and alert on Slack
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/default/watchdog
+ExecStart=/usr/local/bin/watchdog
+User=www-data
+StateDirectory=watchdog
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes

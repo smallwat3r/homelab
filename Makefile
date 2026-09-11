@@ -6,8 +6,12 @@ HOSTS = $(patsubst %/setup.sh,%,$(wildcard */setup.sh))
 $(foreach h,$(HOSTS),$(eval HOST_$(h) = pi@$(h).$(DOMAIN)))
 PROVISION = $(addprefix provision-,$(HOSTS))
 GARDENER_SRC ?= $(HOME)/code/rpi-gardener
+# First line of a pass entry, without the CR pass sometimes leaves
+entry = pass show $(1) | head -1 | tr -d '\r'
+# Pipe stdin onto a host as a root-only file, with an optional prefix
+secret = ssh $(1) 'sudo install -d -m 0700 $(dir $(2)) && { printf "%s" "$(3)"; cat; } | sudo sh -c "umask 077 && cat > $(2)"'
 
-.PHONY: help lint dns push provision $(PROVISION) ivpn-conf deploy-gardener github-token forgejo-token forgejo-mirror ha-sync ha-check ha-restart ha-update ha-logs status
+.PHONY: help lint dns push provision $(PROVISION) ivpn-conf slack-webhook deploy-gardener github-token forgejo-token forgejo-mirror ha-sync ha-check ha-restart ha-update ha-logs status
 
 help:  ## Show this help menu
 	@grep -hE '^[a-zA-Z_%-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -16,25 +20,20 @@ help:  ## Show this help menu
 lint:  ## Shellcheck every script, ruff and mypy the Python ones
 	shellcheck -x -s bash -P SCRIPTDIR lib.sh dns-sync.sh */setup.sh
 	shellcheck -s sh ha/ivpn-ctl gardener/gardener-cert.sh
-	ruff check nas
-	mypy --strict nas
+	ruff check
+	mypy --strict .
 
-provision:  ## Provision every host in parallel (or provision-ha|nas|gardener), a down host doesn't block the rest
+provision:  ## Provision every host in parallel (or provision-<host>), a down host doesn't block the rest
 	$(MAKE) -j$(words $(HOSTS)) -k -O $(PROVISION)
 
 dns:  ## Point <host>.ts.smallwat3r.com at each tailnet IP, DRY_RUN=1 to preview
 	DRY_RUN=$(DRY_RUN) ./dns-sync.sh $(HOSTS)
 
-cert-token-%:  ## Put the Cloudflare token from pass on a host for certbot, once (cert-token-ha|nas|gardener)
-	pass show $(CF_PASS_ENTRY) | head -1 | tr -d '\r' \
-	  | ssh $(HOST_$*) 'sudo install -d -m 0700 $(dir $(CF_CREDENTIALS)) \
-	    && { printf "dns_cloudflare_api_token = "; cat; } \
-	    | sudo sh -c "umask 077 && cat > $(CF_CREDENTIALS)"'
+cert-token-%:  ## Put the Cloudflare token from pass on a host for certbot, once (cert-token-<host>)
+	$(call entry,$(CF_PASS_ENTRY)) | $(call secret,$(HOST_$*),$(CF_CREDENTIALS),dns_cloudflare_api_token = )
 
 github-token:  ## Put the GitHub token from pass on nas for Forgejo's mirrors, once
-	pass show $(GH_PASS_ENTRY) | head -1 | tr -d '\r' \
-	  | ssh $(HOST_nas) 'sudo install -d -m 0700 $(dir $(GH_CREDENTIALS)) \
-	    && sudo sh -c "umask 077 && cat > $(GH_CREDENTIALS)"'
+	$(call entry,$(GH_PASS_ENTRY)) | $(call secret,$(HOST_nas),$(GH_CREDENTIALS))
 
 # Token name carries the machine-id, hostnames alone collide (two laptops both
 # called fedora). The pass entry is only written once nas returned a token, so
@@ -53,8 +52,10 @@ forgejo-mirror:  ## Add mirrors for GitHub repos Forgejo does not have yet (also
 # resolvers (and wg-quick does not need resolvconf)
 ivpn-conf:  ## Put the IVPN WireGuard config from pass on ha, once. Generate it on ivpn.net, store as ivpn/wg-ha
 	pass show $(IVPN_PASS_ENTRY) | tr -d '\r' | sed '/^DNS/d; s/^\[Interface\]/&\nTable = 200/' \
-	  | ssh $(HOST_ha) 'sudo install -d -m 0700 $(dir $(IVPN_CONF)) \
-	    && sudo sh -c "umask 077 && cat > $(IVPN_CONF)"'
+	  | $(call secret,$(HOST_ha),$(IVPN_CONF))
+
+slack-webhook:  ## Put the Slack incoming webhook URL from pass on lookout for the watchdog, once
+	$(call entry,$(SLACK_PASS_ENTRY)) | $(call secret,$(HOST_lookout),$(SLACK_CONF),SLACK_WEBHOOK=)
 
 push:  ## Copy the whole repo to a host (make push HOST=pi@nas.ts.smallwat3r.com)
 	rsync -a --delete --exclude .git ./ $(HOST):$(REMOTE_DIR)/
@@ -99,6 +100,9 @@ STATUS_nas = $(call units,glances pod-filebrowser forgejo taildrop certbot.timer
   curl -s -m 3 http://$(NAS_IP):$(GLANCES_PORT)/api/4/status; echo
 STATUS_gardener = $(call units,glances certbot.timer); \
   curl -s -m 3 http://$(GARDENER_IP):$(GLANCES_PORT)/api/4/status; echo
+STATUS_lookout = tailscale status --self | head -1; \
+  $(call units,watchdog.timer nginx certbot.timer); \
+  curl -sf -m 5 https://lookout.$(DOMAIN)/ | grep -E "^<tr><td|^<p>" | sed "s/<[^>]*>/ /g"
 
 status:  ## Quick health check of all hosts
 	@$(foreach h,$(HOSTS),echo "== $(h)"; ssh $(HOST_$(h)) '$(STATUS_$(h))';)
