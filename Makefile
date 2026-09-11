@@ -33,10 +33,14 @@ github-token:  ## Put the GitHub token from pass on nas for Forgejo's mirrors, o
 	  | ssh $(HOST_nas) 'sudo install -d -m 0700 $(dir $(GH_CREDENTIALS)) \
 	    && sudo sh -c "umask 077 && cat > $(GH_CREDENTIALS)"'
 
+# Token name carries the machine-id, hostnames alone collide (two laptops both
+# called fedora). The pass entry is only written once nas returned a token, so
+# a failed mint cannot blank out a token already stored
 forgejo-token:  ## Mint a Forgejo push token on nas into pass for this machine's notes repo, once
-	ssh $(HOST_nas) "sudo podman exec -u git forgejo forgejo admin user generate-access-token --raw \
-	    --username $(FORGEJO_USER) --token-name notes-$$(hostname) --scopes write:repository" \
-	  | { cat; echo "username: $(FORGEJO_USER)"; } | pass insert -m -f git/nas.$(DOMAIN)
+	token=$$(ssh $(HOST_nas) "sudo podman exec -u git forgejo forgejo admin user generate-access-token --raw \
+	    --username $(FORGEJO_USER) --token-name notes-$$(hostname)-$$(cut -c1-8 /etc/machine-id) \
+	    --scopes write:repository") && [ -n "$$token" ] \
+	  && printf '%s\nusername: %s\n' "$$token" $(FORGEJO_USER) | pass insert -m -f git/nas.$(DOMAIN)
 
 forgejo-mirror:  ## Add mirrors for GitHub repos Forgejo does not have yet (also runs daily on nas)
 	ssh $(HOST_nas) 'sudo forgejo-mirror'

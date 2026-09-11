@@ -97,8 +97,9 @@ administration.
 `~/notes` on a laptop is a private repo on Forgejo, pushed over HTTPS with
 a token. Emacs keeps org, journal and deft under it, anything else (md,
 txt, whatever) goes alongside. `make forgejo-token` mints a token on nas
-and stores it in pass as `git/nas.ts.smallwat3r.com`, where the dotfiles'
-`git-credential-pass` helper finds it. Pushing creates the repo, so the
+(named after the hostname and machine-id, so same-named laptops do not
+clash) and stores it in pass as `git/nas.ts.smallwat3r.com`, where the
+dotfiles' `git-credential-pass` helper finds it. Pushing creates the repo, so the
 first laptop pushes:
 
     git -C ~/notes remote add origin https://nas.ts.smallwat3r.com/git/smallwat3r/notes.git
