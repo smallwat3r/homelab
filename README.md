@@ -99,13 +99,14 @@ a token. Emacs keeps org, journal and deft under it, anything else (md,
 txt, whatever) goes alongside. `make forgejo-token` mints a token on nas
 and stores it in pass as `git/nas.ts.smallwat3r.com`, where the dotfiles'
 `git-credential-pass` helper finds it. Pushing creates the repo, so the
-first push from a fresh laptop is:
+first laptop pushes:
 
     git -C ~/notes remote add origin https://nas.ts.smallwat3r.com/git/smallwat3r/notes.git
     git -C ~/notes push -u origin main
 
-after that the `notes-sync` user timer from the dotfiles commits and pushes
-every 15 minutes. The mirror job leaves it alone, it only adds repos GitHub
+and any other laptop clones that URL to `~/notes`. From there the
+`notes-sync` user timer from the dotfiles commits, pulls and pushes every
+15 minutes, a conflict stops it until fixed by hand. The mirror job leaves it alone, it only adds repos GitHub
 has that Forgejo does not.
 
 ## Home Assistant
