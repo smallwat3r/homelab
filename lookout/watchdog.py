@@ -17,13 +17,15 @@ from pathlib import Path
 from string import Template
 
 DOMAIN = "@DOMAIN@"
-# name and URL, the name is the state file and what Slack and the page show
+# Name, URL and the host it runs on if that is checked separately. The name
+# is the state file and what Slack and the page show. A service on a down
+# host is down without a fetch or a message of its own.
 CHECKS = [
-    ("ha", f"https://ha.{DOMAIN}/"),
-    ("nas", f"https://nas.{DOMAIN}/"),
-    ("files", f"https://nas.{DOMAIN}/files/"),
-    ("git", f"https://nas.{DOMAIN}/git/"),
-    ("gardener", f"https://gardener.{DOMAIN}/health"),
+    ("ha", f"https://ha.{DOMAIN}/", None),
+    ("nas", f"https://nas.{DOMAIN}/", None),
+    ("files", f"https://nas.{DOMAIN}/files/", "nas"),
+    ("git", f"https://nas.{DOMAIN}/git/", "nas"),
+    ("gardener", f"https://gardener.{DOMAIN}/health", None),
 ]
 STATE = Path(os.environ["STATE_DIRECTORY"])
 WEBHOOK = os.environ["SLACK_WEBHOOK"]
@@ -82,26 +84,46 @@ def notify(name: str, state: str, url: str) -> bool:
         return False
 
 
-def check(name: str, url: str) -> str:
-    """Check one service, alert on a change, return its row for the page."""
+def check(name: str, url: str) -> tuple[str, bool]:
+    """Check one service and alert on a change, returns the state and
+    whether a message is still owed because Slack refused it."""
     state = "up" if is_up(url) else "down"
     state_file = STATE / name
     was = state_file.read_text().strip() if state_file.exists() else "up"
+    owed = False
     if state != was:
         print(f"{name} is {state}", flush=True)
         if notify(name, state, url):
             state_file.write_text(state)
+        else:
+            owed = True
+    return state, owed
+
+
+def row(name: str, url: str, state: str) -> str:
+    state_file = STATE / name
     since = stamp(state_file.stat().st_mtime) if state_file.exists() else "never"
     return (f'<tr><td><a href="{html.escape(url)}">{html.escape(name)}</a>'
             f'<td class="{state}">{state}<td>{since}')
 
 
 def main() -> None:
-    rows = [check(name, url) for name, url in CHECKS]
+    states: dict[str, str] = {}
+    rows = []
+    owed = False
+    for name, url, host in CHECKS:
+        if host and states[host] == "down":
+            states[name] = "down"
+        else:
+            states[name], missed = check(name, url)
+            owed = owed or missed
+        rows.append(row(name, url, states[name]))
     # written aside then moved, so nginx never serves a half page
     tmp = STATE / ".index.html"
     tmp.write_text(PAGE.substitute(rows="\n".join(rows), checked=stamp()))
     tmp.replace(STATE / "index.html")
+    # a failed post fails the unit, so it shows in systemctl until it lands
+    sys.exit(owed)
 
 
 if __name__ == "__main__":
