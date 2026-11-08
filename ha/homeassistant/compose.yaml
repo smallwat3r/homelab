@@ -7,10 +7,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
-      # rslave so the share appears inside even when the NAS mounts after
-      # the container started
+      # bind the parent, not the autofs trigger, so a down NAS cannot block container
+      # creation, rslave makes the share appear under /media/NAS/stuff once it mounts
       - type: bind
-        source: /mnt/nas/stuff
+        source: /mnt/nas
         target: /media/NAS
         bind:
           propagation: rslave
