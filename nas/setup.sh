@@ -126,6 +126,19 @@ install_omv_certificate() {
   sudo /usr/local/sbin/omv-cert
 }
 
+# The NASPi case fan spins flat out unless GPIO 18 drives it, the overlay
+# hands it to the kernel's pwm-fan: off when cool, ramping with the CPU
+# temperature. Curve and wiring notes are in naspi-fan.dts. Applies on
+# next boot.
+install_fan() {
+  log "fan"
+  command -v dtc >/dev/null || apt_install device-tree-compiler
+  dtc -@ -I dts -O dtb "${HOST_DIR}/naspi-fan.dts" \
+    | sudo install -m 0755 /dev/stdin /boot/firmware/overlays/naspi-fan.dtbo
+  grep -q '^dtoverlay=naspi-fan' /boot/firmware/config.txt \
+    || printf '[all]\ndtoverlay=naspi-fan\n' | sudo tee -a /boot/firmware/config.txt >/dev/null
+}
+
 main() {
   # a provision right after a reboot must not race OMV's services coming up,
   # || true because a degraded state (any failed unit) still means booted
@@ -133,6 +146,7 @@ main() {
   install_tailscale
   install_omv
   install_omv_certificate
+  install_fan
   install_glances "${NAS_IP}"
   install_filebrowser
   install_filebrowser_path

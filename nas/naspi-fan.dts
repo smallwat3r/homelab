@@ -1,0 +1,102 @@
+// NASPi (X-C1 V2.0) case fan on the kernel's pwm-fan, driven by the Pi's
+// hardware PWM on GPIO 18. The stock pwm-gpio-fan overlay is software PWM
+// at 50Hz, which this fan does not spin up on, 2kHz is what the vendor
+// script uses. The FAN FS jumper on the X-C1 must be fitted, without it
+// the fan ignores the pin.
+//
+// To tune, edit cooling-levels (0-255 duty per step, 128 is the lowest
+// value known to start the fan) and the trip temperatures (millicelsius),
+// then re-provision and reboot.
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2711";
+
+	fragment@0 {
+		target = <&gpio>;
+		__overlay__ {
+			fan_pwm_pins: fan_pwm_pins {
+				brcm,pins = <18>;
+				brcm,function = <2>; // alt5, PWM0
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&pwm>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&fan_pwm_pins>;
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target-path = "/";
+		__overlay__ {
+			fan0: pwm-fan {
+				compatible = "pwm-fan";
+				#cooling-cells = <2>;
+				pwms = <&pwm 0 500000 0>; // 2kHz
+				cooling-levels = <0 128 160 204 255>;
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&cpu_thermal>;
+		__overlay__ {
+			polling-delay = <2000>;
+		};
+	};
+
+	// off below 50C, then 50%, 63%, 80% and 100%
+	fragment@4 {
+		target = <&thermal_trips>;
+		__overlay__ {
+			trip0: trip0 {
+				temperature = <55000>;
+				hysteresis = <5000>;
+				type = "active";
+			};
+			trip1: trip1 {
+				temperature = <60000>;
+				hysteresis = <5000>;
+				type = "active";
+			};
+			trip2: trip2 {
+				temperature = <67500>;
+				hysteresis = <5000>;
+				type = "active";
+			};
+			trip3: trip3 {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "active";
+			};
+		};
+	};
+
+	fragment@5 {
+		target = <&cooling_maps>;
+		__overlay__ {
+			map0 {
+				cooling-device = <&fan0 0 1>;
+				trip = <&trip0>;
+			};
+			map1 {
+				cooling-device = <&fan0 1 2>;
+				trip = <&trip1>;
+			};
+			map2 {
+				cooling-device = <&fan0 2 3>;
+				trip = <&trip2>;
+			};
+			map3 {
+				cooling-device = <&fan0 3 4>;
+				trip = <&trip3>;
+			};
+		};
+	};
+};
