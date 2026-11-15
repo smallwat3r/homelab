@@ -1,14 +1,6 @@
-# Terminal look on the emacs creamy palette, flat square cards, ocrab
-# monospace everywhere. Colour names in comments are the X11 names creamy uses.
+# Terminal look on the emacs creamy palette, flat square cards, Home
+# Assistant's stock font. Colour names in comments are the X11 names creamy uses.
 Terminal:
-  primary-font-family: '"ocrab", monospace'
-  ha-font-family-body: var(--primary-font-family)
-  ha-font-family-heading: var(--primary-font-family)
-  ha-font-family-longform: var(--primary-font-family)
-  ha-font-family-code: var(--primary-font-family)
-  # ocrab runs wide, scale every ha-font-size-* token down a notch
-  ha-font-size-scale: 0.9
-
   primary-color: "#a020f0"  # Purple, font-lock-keyword
   accent-color: "#00868b"  # turquoise4, font-lock-string
   light-primary-color: "#c488ff"  # show-paren-match

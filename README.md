@@ -151,9 +151,9 @@ has that Forgejo does not.
 ## Home Assistant
 
 Runtime state stays on the Pi under /opt/homeassistant. Repo-managed:
-compose.yaml, configuration.yaml, dashboards, the Terminal theme and the
-ocrab font. `make ha-sync` pushes them, `make ha-update` pulls the latest
-image. HACS and eero are installed into custom_components by setup.sh.
+compose.yaml, configuration.yaml, dashboards and the Terminal theme.
+`make ha-sync` pushes them, `make ha-update` pulls the latest image. HACS and
+eero are installed into custom_components by setup.sh.
 
 One-time steps in the UI that setup.sh cannot do:
 

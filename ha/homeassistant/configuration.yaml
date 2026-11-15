@@ -4,11 +4,8 @@ homeassistant:
   external_url: https://ha.ts.smallwat3r.com
 
 # themes/ holds the repo's Terminal theme, picked per user in the profile.
-# www/ is served at /local, the module loads the ocrab font for the theme.
 frontend:
   themes: !include_dir_merge_named themes
-  extra_module_url:
-    - /local/ocrab.js
 
 # commit every five minutes rather than every few seconds, the SD card
 # otherwise takes a gigabyte a day of the same pages rewritten. A power

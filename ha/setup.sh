@@ -158,8 +158,7 @@ install_home_assistant() {
   for f in automations scripts scenes; do
     [[ -f "${HA_CONFIG_DIR}/${f}.yaml" ]] || touch "${HA_CONFIG_DIR}/${f}.yaml"
   done
-  cp -r "${HOST_DIR}"/homeassistant/{dashboards,themes,www,.ssh} "${HA_CONFIG_DIR}/"
-  install -D -m 0644 "${HOST_DIR}/../ocrab.woff2" "${HA_CONFIG_DIR}/www/fonts/ocrab.woff2"
+  cp -r "${HOST_DIR}"/homeassistant/{dashboards,themes,.ssh} "${HA_CONFIG_DIR}/"
   install_ivpn_switch
   install_hacs
   install_eero
